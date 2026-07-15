@@ -68,18 +68,77 @@ npx tsc --noEmit
 npx playwright test    # E2E
 ```
 
-## 機体画像について
+## 管理者アカウント
 
-機体画像（`frontend/public/images/units/`）は**このリポジトリには含まれていません**（Git 管理外）。
-ローカルおよびデプロイ時に別途配置してください。画像が無くてもゲームは動作しますが、機体画像は表示されません。
-
-## デプロイ
+`is_admin` を持つキャラは管理画面（`/admin`）を使えます。ローカル・本番のどちらにも同じコマンドで作れます。
+**`--local` / `--remote` は必須**です（既定値を持たせると事故るため）。
 
 ```bash
 cd backend
-npx wrangler secret put JWT_SECRET   # 初回のみ
+
+# 既存キャラを管理者に昇格（先にサイトで新規登録しておく。こちらが安全で推奨）
+npm run admin -- --id=<ログインID> --local
+npm run admin -- --id=<ログインID> --remote     # 本番
+
+# 新規に管理者キャラを作る
+npm run admin -- --id=<ログインID> --create --handle=<ハンドル名> --chara=<キャラ名> --local
+```
+
+パスワードは引数で渡しません（シェル履歴に残るため）。実行時にプロンプトで訊かれます。
+CI 等で自動化する場合のみ環境変数 `ADMIN_PASSWORD` が使えます。
+
+## 機体画像について
+
+機体画像は **R2 バケット `g-tactics-assets`** に置いてあり、Worker が `/images/units/*` で配信します。
+**リポジトリにもデプロイ成果物にも含まれません**（`.gitignore` ＋ ビルド時に `dist` から除外）。
+そのため、コードをデプロイしても画像は消えません。画像が無いユニットはプレースホルダが表示されます。
+
+- ローカル開発用の実体: `frontend/public/images/units/`（Git 管理外。Vite dev server が配信）
+- 本番の配信元: R2（`units/<ファイル名>` というキーで格納）
+
+### 画像を追加・更新する
+
+```bash
+cd backend
+npx wrangler r2 object put g-tactics-assets/units/<ファイル名> \
+  --remote --file ../frontend/public/images/units/<ファイル名> --content-type image/gif
+```
+
+> **`--remote` を必ず付けること。** 付け忘れるとローカルのエミュレータに書き込まれ、
+> `Upload complete.` と表示されるのに本番には**一切反映されません**（無言で失敗する）。
+> 確認は `npx wrangler r2 object get g-tactics-assets/units/<ファイル名> --remote --file /tmp/x` で行う。
+> `wrangler r2 bucket info` の `object_count` は反映が遅れるため、確認に使わないこと。
+
+DB の `units.image` に書かれたファイル名がそのままキーになります（大文字小文字も区別されます）。
+
+## デプロイ
+
+フロント・API・画像はすべて 1 つの Worker (`g-tactics`) に集約されています。
+
+```
+/api/*          → API (D1)
+/images/units/* → R2
+/*              → フロントの静的アセット（SPA フォールバック）
+```
+
+```bash
+# 1) フロントをビルド（機体画像は自動で dist から除外される）
+cd frontend && npm run build
+
+# 2) Worker をデプロイ
+cd ../backend
+npx wrangler secret put JWT_SECRET   # 初回のみ。未設定だと認証が動かない
 npm run deploy
 ```
+
+本番 DB の初期化は初回のみ:
+
+```bash
+cd backend
+npx wrangler d1 execute gtactics-db --remote --file ./migrations/0001_baseline.sql
+```
+
+`seed_dev.sql` は開発用テストキャラなので**本番には流さないでください**。
 
 ## ライセンス / 注意
 

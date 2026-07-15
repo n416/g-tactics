@@ -14,8 +14,8 @@ test.describe('Communication Features', () => {
   });
 
   test('should post and view chat messages', async ({ page }) => {
-    // MyPageからチャットへ遷移
-    await page.click('button:has-text("チャット")');
+    // ナビはマイページ下部のボタン群から AppLayout のサイドバー（リンク）へ移設済み
+    await page.getByRole('link', { name: 'チャット' }).click();
     await expect(page).toHaveURL(/.*chat/);
 
     // チャット投稿
@@ -28,8 +28,7 @@ test.describe('Communication Features', () => {
   });
 
   test('should post and view bbs messages', async ({ page }) => {
-    // MyPageからBBSへ遷移
-    await page.click('button:has-text("掲示板")');
+    await page.getByRole('link', { name: '掲示板' }).click();
     await expect(page).toHaveURL(/.*bbs/);
 
     // BBS投稿
@@ -46,7 +45,7 @@ test.describe('Communication Features', () => {
 
   test('should send a private message from Profile page', async ({ page }) => {
     // ランキング等から他のユーザーのProfileへ飛ぶ
-    await page.click('button:has-text("ランキング")');
+    await page.getByRole('link', { name: 'ランキング' }).click();
     await expect(page).toHaveURL(/.*ranking/);
     
     // testuser2 (or another user) のリンクを探してクリック (IDが user2 だと仮定)

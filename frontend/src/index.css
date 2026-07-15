@@ -1,122 +1,183 @@
+/* ============================================================
+ * G-Tactics 基盤スタイル
+ *
+ * 構成:
+ *   1. デザイントークン
+ *   2. リセット / ベース
+ *   3. プリミティブ（.panel / .btn / .field ...）
+ *   4. レスポンシブ用ユーティリティ
+ *
+ * ページ側のインライン style（現状 1300 箇所超）はここのトークンを
+ * 参照していないものが多い。移行は段階的に行う。新規コードでは
+ * 生の色コードを書かず、必ずトークンを使うこと。
+ * ============================================================ */
+
+/* ---------- 1. デザイントークン ---------- */
 :root {
+  /* 背景 */
+  --bg-color: #0f172a;
+  --bg-raised: #16213a;
+  --panel-bg: #1e293b;
+  --panel-inset: rgba(0, 0, 0, 0.25);
+
+  /* 文字 */
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
-  --bg-color: #0f172a;
-  --panel-bg: #1e293b;
+  --text-muted: #64748b;
+
+  /* 罫線 */
   --border-color: #334155;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+
+  /* アクセント
+   * accent    = ボタン等の面で使う青
+   * accent-cyan = 見出し・リンクで使う明るい水色（旧 #4facfe。既存コードに約50箇所ベタ書き）
+   */
   --accent-color: #3b82f6;
   --accent-hover: #2563eb;
+  --accent-cyan: #4facfe;
+
+  /* 状態色 */
+  --success: #4bff7d;
+  --warning: #ecc94b;
+  --danger: #ef4444;
+  --info: #4bc8ff;
+
+  /* 余白（4px スケール） */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
   --radius: 4px;
+  --radius-lg: 8px;
+
+  /* レイアウト寸法（layout.css と共有） */
+  --header-h: 56px;
+  --sidebar-w: 220px;
+  --content-max: 1100px;
 }
 
+/* ---------- 2. リセット / ベース ---------- */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  /* iOS で横幅がはみ出した際に勝手にズームさせない */
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, Helvetica, Arial, sans-serif;
   background: var(--bg-color);
   color: var(--text-primary);
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   -webkit-font-smoothing: antialiased;
+  /* 旧実装はここが display:flex + center だった。全ページが「画面中央の1枚パネル」に
+   * 固定され、内容が画面より大きいと左右にはみ出して到達不能になっていた。
+   * レイアウトは AppLayout が持つので、body は素の縦積みに戻す。 */
+  overflow-x: hidden;
 }
 
-.glass-container {
-  background: var(--panel-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  padding: 40px;
-  max-width: 600px;
-  width: 90%;
-  text-align: center;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+#root {
+  min-height: 100vh;
 }
 
-h1 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+img {
+  max-width: 100%;
+}
+
+h1, h2, h3, h4 {
   color: var(--text-primary);
   font-weight: 700;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
 }
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.1rem; }
 
 p {
   color: var(--text-secondary);
   line-height: 1.6;
-  margin-bottom: 2rem;
+}
+
+a {
+  color: var(--accent-cyan);
+}
+
+/* ---------- 3. プリミティブ ---------- */
+.panel,
+.premium-glass-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: var(--space-8);
 }
 
 .status-box {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--panel-inset);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
-  padding: 16px;
-  word-break: break-all;
+  padding: var(--space-4);
+  word-break: break-word;
 }
 
 button {
   background: var(--panel-bg);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  padding: 10px 20px;
+  padding: var(--space-3) var(--space-5);
   border-radius: var(--radius);
   font-size: 1rem;
   font-weight: 500;
+  font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-button:hover {
+button:hover:not(:disabled) {
   background: var(--border-color);
 }
 
-.input-field {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  padding: 0.75rem 1rem;
-  color: var(--text-primary);
-  font-size: 1rem;
-  transition: all 0.2s ease;
-  font-family: inherit;
+button:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
 }
 
-.input-field:focus {
+.input-field,
+.cyber-input {
+  width: 100%;
+  background: var(--panel-inset);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  color: var(--text-primary);
+  /* 16px 未満だと iOS Safari がフォーカス時に自動ズームする */
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.input-field:focus,
+.cyber-input:focus {
   outline: none;
   border-color: var(--accent-color);
   box-shadow: 0 0 0 1px var(--accent-color);
-  background: rgba(0, 0, 0, 0.4);
-}
-
-/* 元祖トンマナ(フラット slate/青)に統一。cyber- / premium- 系をトークンベースのフラットに揃える */
-.premium-glass-panel {
-  background: var(--panel-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  padding: 2rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.premium-glass-panel::before {
-  content: none;
-}
-
-.premium-glass-panel > * {
-  position: relative;
-  z-index: 1;
 }
 
 .cyber-input-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .cyber-label {
@@ -127,58 +188,29 @@ button:hover {
   color: var(--text-secondary);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
-.cyber-label.accent {
-  color: var(--accent-color);
-}
-
-.cyber-input {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  padding: 0.8rem 1.2rem;
-  color: var(--text-primary);
-  font-size: 1rem;
-  transition: border-color 0.2s ease;
-  font-family: inherit;
-}
-
-.cyber-input:focus {
-  outline: none;
-  border-color: var(--accent-color);
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.cyber-input.accent:focus {
-  border-color: var(--accent-color);
-}
+.cyber-label.accent { color: var(--accent-color); }
 
 .cyber-button-primary {
   width: 100%;
   background: var(--accent-color);
   color: #fff;
   border: none;
-  padding: 1rem;
+  padding: var(--space-4);
   border-radius: var(--radius);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: bold;
   letter-spacing: 0.05em;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.15s ease;
   text-transform: uppercase;
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }
 
-.cyber-button-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
-.cyber-button-primary:active:not(:disabled) {
-  transform: translateY(1px);
-}
+.cyber-button-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.cyber-button-primary:active:not(:disabled) { transform: translateY(1px); }
 
 .cyber-button-primary:disabled {
   background: var(--border-color);
@@ -186,10 +218,90 @@ button:hover {
   opacity: 0.7;
 }
 
-.cyber-button-accent {
-  background: var(--accent-color);
+.cyber-button-accent { background: var(--accent-color); }
+.cyber-button-accent:hover:not(:disabled) { background: var(--accent-hover); }
+
+/* ---------- 4. レスポンシブ用ユーティリティ ---------- */
+
+/* 2カラム → 狭い画面で1カラム。
+ * インライン style では @media が書けないため、折り返しが要る箇所はこのクラスを使う。 */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
 }
 
-.cyber-button-accent:hover:not(:disabled) {
-  background: var(--accent-hover);
+@media (max-width: 900px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* 横に並べたいが、入らなければ折り返してよい行 */
+.row-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* ページ見出しの行（タイトル + そのページ固有の操作） */
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* ラベルと値を両端に置く行。
+ * 素の flex + space-between だと、幅が足りないときに文字単位で改行して
+ * 「ユニ / ット」のように崩れる。値側の折り返しを禁止して行ごと折り返させる。 */
+.kv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.kv-row > * { white-space: nowrap; }
+
+/* 【地上】【水中】… のように短い項目を並べる行。入らなければ折り返す */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+}
+
+.chip-row > span { white-space: nowrap; }
+
+/* 行内に添える小さな操作ボタン（「機体解説」「武器搭載」など） */
+.mini-btn {
+  background: var(--border-color);
+  color: var(--text-primary);
+  border: none;
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  flex: none;
+}
+
+.mini-btn:hover:not(:disabled) { background: #475569; }
+
+/* 表など、どうしても縮まないものはこれで包んで単体スクロールさせる。
+ * body 側の横スクロールを起こさせないための受け皿。 */
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.only-desktop { display: initial; }
+.only-mobile { display: none; }
+
+@media (max-width: 900px) {
+  .only-desktop { display: none; }
+  .only-mobile { display: initial; }
 }

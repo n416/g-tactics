@@ -6,9 +6,12 @@
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
-  // "vars": {
-  //   "MY_VAR": "my-variable"
-  // },
+  "vars": {
+    // Google OAuth のクライアントID。これは公開情報（同意画面へのURLに載ってブラウザに出る）
+    // なのでリポジトリに置いてよい。対になる GOOGLE_CLIENT_SECRET は秘密なので
+    // `npx wrangler secret put GOOGLE_CLIENT_SECRET` で入れること（ここには絶対に書かない）。
+    "GOOGLE_CLIENT_ID": "716275360793-uuubfea5mj9lemem1n5o1ja2seksbblt.apps.googleusercontent.com"
+  },
   // "kv_namespaces": [
   //   {
   //     "binding": "MY_KV_NAMESPACE",

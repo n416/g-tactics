@@ -16,7 +16,7 @@
 // 環境変数 ADMIN_PASSWORD で渡す。
 //
 // 実装メモ:
-// - パスワードは本体(auth.ts)と同じ SHA-256 hex・ソルト無しで作る。方式を変えるとログインできない。
+// - パスワードは本体(src/utils/password.ts)と同じ PBKDF2 で作る。方式を変えるとログインできない。
 // - 読み取り(SELECT)は --command を使う。--remote の --file は実行結果の行ではなく
 //   「実行統計」(Total queries executed 等)を返すため、行が取れず存在判定を誤る。
 // - 書き込みは一時ファイル(UTF-8)に書いて --file で流す。日本語を含むため。
@@ -24,7 +24,7 @@
 // ============================================================
 import { execFileSync } from 'node:child_process';
 import { writeFileSync, unlinkSync, mkdtempSync, existsSync } from 'node:fs';
-import { createHash } from 'node:crypto';
+import { pbkdf2Sync, randomBytes } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -51,7 +51,19 @@ if (isRemote === isLocal) die('--local か --remote のどちらか一方を指�
 if (!/^[A-Za-z0-9_-]+$/.test(id)) die('--id は英数字・_・- のみにしてください。');
 
 const sqlStr = (s) => `'${String(s).replace(/'/g, "''")}'`;
-const sha256Hex = (s) => createHash('sha256').update(s, 'utf8').digest('hex');
+
+// パスワードのハッシュ。src/utils/password.ts と同一の方式・同一の保存形式にすること。
+// ここが本体とズレると、作った管理者がログインできない。
+//   形式: pbkdf2$<iterations>$<salt_b64>$<hash_b64>
+// 本体は WebCrypto、こちらは node:crypto を使うが、
+// PBKDF2-HMAC-SHA256 / UTF-8 の平文 / 生バイトのソルト という条件が同じなので出力は一致する。
+// （この一致は test/password.test.ts が検証している）
+const PBKDF2_ITERATIONS = 600_000;
+const hashPassword = (password) => {
+  const salt = randomBytes(16);
+  const hash = pbkdf2Sync(Buffer.from(password, 'utf8'), salt, PBKDF2_ITERATIONS, 32, 'sha256');
+  return `pbkdf2$${PBKDF2_ITERATIONS}$${salt.toString('base64')}$${hash.toString('base64')}`;
+};
 
 // wrangler は node_modules 内の JS 本体を直接叩く。
 // Windows では .cmd を execFileSync から起動できない（spawnSync EINVAL）ため、npx/.bin は使わない。
@@ -148,11 +160,11 @@ if (!password || password.length < 8) die('パスワードは8文字以上にし
 // traits だけは register がランダム付与するため再現しない（上の警告を参照）。
 const sql = `
 INSERT INTO characters
-  (id, password_hash, handle_name, email, chara_name,
+  (id, password_hash, handle_name, chara_name,
    status_intuition, status_piloting, status_short_range, status_mid_range, status_long_range,
    unit_id, money, traits, skills, is_admin)
 VALUES
-  (${sqlStr(id)}, ${sqlStr(sha256Hex(password))}, ${sqlStr(handle)}, '', ${sqlStr(chara)},
+  (${sqlStr(id)}, ${sqlStr(hashPassword(password))}, ${sqlStr(handle)}, ${sqlStr(chara)},
    10, 10, 10, 10, 10,
    0, 1000, '{}', '{}', 1);
 `;

@@ -1,3 +1,12 @@
 # ローカル開発用の環境変数。このファイルをコピーして .dev.vars を作成すること。
 # 本番は `npx wrangler secret put JWT_SECRET` で設定する（リポジトリに秘密鍵を置かない）。
 JWT_SECRET="set-a-long-random-value-here"
+
+# ブラウザから見たこのアプリの origin（ローカルのみ必要）。
+# Vite(5199) が /api を wrangler(8787) にプロキシするため、Worker から見た origin と
+# ブラウザの居場所が食い違う。Google のリダイレクトURIと一致させるために明示する。
+PUBLIC_ORIGIN=http://localhost:5199
+
+# Google OAuth のクライアントシークレット（ローカルで Google ログインを試す場合のみ）。
+# 本番は `npx wrangler secret put GOOGLE_CLIENT_SECRET`。
+GOOGLE_CLIENT_SECRET="set-your-google-oauth-client-secret"

@@ -1,0 +1,27 @@
+-- P56: characters.email を廃止する（既存DB用の後追い）
+--
+-- 背景:
+--   登録フォームで email を任意入力として集めていたが、アプリのどこからも
+--   SELECT されておらず、書き込み専用の死にカラムだった。
+--   使わない個人情報を保持し続ける理由が無いため、収集をやめた上で列ごと落とす。
+--   （収集停止は src/routes/auth.ts、フォームからの削除は frontend/src/pages/Register.tsx）
+--
+-- baseline.sql からは既に削除済み。新規に作るDBにはこの列は存在しないので、
+-- このファイルは「既に稼働しているDB」にだけ流す。
+--
+-- ★ このファイルは他の tools/*_local_alter.sql と違い、本番にも流す必要がある。
+--   本番だけ列が残っていると、baseline と実DBが drift する（過去に tournaments で
+--   同じ事故が起きている。tools/local_drift_repair.sql の経緯を参照）。
+--
+--   ローカル: npx wrangler d1 execute gtactics-db --local  --file ./tools/p56_drop_email.sql
+--   本番:     npx wrangler d1 execute gtactics-db --remote --file ./tools/p56_drop_email.sql
+--
+-- ★ 破壊的な操作である点に注意。
+--   他の tools/*.sql は ADD COLUMN / CREATE TABLE IF NOT EXISTS の非破壊だが、
+--   これは列とその中身を削除する。個人情報の削除が目的なので、これは意図どおり。
+--   実行前に、消えて困る値が入っていないか確認すること:
+--     SELECT COUNT(*) FROM characters WHERE email IS NOT NULL AND email <> '';
+--
+-- 冪等性: 既に列が無いDBで流すと "no such column: email" になる。新規DBには不要。
+
+ALTER TABLE characters DROP COLUMN email;

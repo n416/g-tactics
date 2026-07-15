@@ -4,6 +4,7 @@ import { parseTraits } from '../utils/traits'
 import { trainingSuccessTraitTerm } from '../utils/traitEffects'
 import { getUpOver240, calcNormalCost, calcEnhancedCost, checkNormalSuccess, checkEnhancedSuccess } from '../utils/trainingLogic'
 import { getFullCharacter, calcMaxHp, calcMaxEn } from '../utils/battleEngine'
+import { hashPassword, verifyPassword } from '../utils/password'
 
 
 type Bindings = {
@@ -445,15 +446,24 @@ profileApp.post('/edit', async (c) => {
 
     const data = await c.req.json()
     
-    if (data.current_password && data.new_password) {
-      const encoder = new TextEncoder()
-      const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(data.current_password))
-      const password_hash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('')
-      if (password_hash !== user.password_hash) {
-        return c.json({ success: false, message: '現在のパスワードが間違っています' }, 400)
+    // パスワードの設定・変更。ハッシュ方式は utils/password に集約してある（旧方式もここで照合できる）。
+    //
+    // Google だけで登録した人は password_hash が '' で、照合できる「現在のパスワード」を
+    // そもそも持たない。以前はここが current_password を必ず要求していたため、
+    // その人は永久にパスワードを設定できず、結果として Google 連携も解除できなかった。
+    // 既に JWT で本人確認は済んでいるので、パスワード未設定の場合に限り初回設定を許す。
+    if (data.new_password) {
+      const hasPassword = !!user.password_hash
+      if (hasPassword) {
+        const { ok } = await verifyPassword(user.password_hash, data.current_password || '')
+        if (!ok) {
+          return c.json({ success: false, message: '現在のパスワードが間違っています' }, 400)
+        }
       }
-      const newHashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(data.new_password))
-      const new_password_hash = Array.from(new Uint8Array(newHashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('')
+      if (String(data.new_password).length < 4) {
+        return c.json({ success: false, message: 'パスワードは4文字以上で入力してください' }, 400)
+      }
+      const new_password_hash = await hashPassword(data.new_password)
       await c.env.DB.prepare(`UPDATE characters SET password_hash = ? WHERE id = ?`).bind(new_password_hash, payload.id).run()
     }
 

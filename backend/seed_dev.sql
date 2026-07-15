@@ -10,9 +10,16 @@
 --   cd backend
 --   wrangler d1 execute gtactics-db --local --file ./seed_dev.sql
 --
--- パスワードは無ソルト SHA-256（auth.ts の login と同方式）。
 --   admin1 / パスワード: admin1   （is_admin=1）
 --   user1  / パスワード: user1
+--
+-- ここの password_hash は旧方式（無ソルト SHA-256 の hex）のまま置いてある。
+-- 本体のハッシュは PBKDF2 に移行済みだが、login は旧方式も受け入れ、
+-- 認証に成功した時点で新方式へ書き換える（src/utils/password.ts）。
+-- そのため、このシードは初回ログインで自動的に移行され、
+-- ついでに移行経路そのものを開発中に踏み続けられる。
+-- 新規に書くならソルト付きの値を入れること（src/utils/password.ts の形式）。
+--
 -- ※ dev 用途限定。本番運用時はこのファイルを適用しないこと。
 -- ============================================================
 

@@ -35,9 +35,23 @@ CREATE TABLE items (
 
 CREATE TABLE characters (
   id VARCHAR(255) PRIMARY KEY,
+  -- password_hash の形式は src/utils/password.ts が唯一の正（pbkdf2$<反復回数>$<salt>$<hash>）。
+  -- 旧・無ソルトSHA-256(hex64)の行も login が受け入れ、認証成功時に書き換える。
+  --
+  -- Google だけで登録した人はパスワードを持たないので '' が入る。
+  -- SQLite は既存列の NOT NULL を落とせず、characters.id は30列から参照されているため
+  -- テーブル再構築は割に合わない。'' は verifyPassword() が必ず false を返すので、
+  -- 「パスワードでのログインが構造的に不可能」という意図どおりの状態になる。
   password_hash VARCHAR(255) NOT NULL,
+  -- Google アカウントの sub（このアプリ専用の不変な識別子）。未連携なら NULL。
+  -- 要求スコープは openid のみなので、メールアドレスや氏名は受け取らないし保存もしない。
+  -- 一意性は下の idx_characters_google_sub で担保する（列に UNIQUE を書くと、
+  -- ADD COLUMN しかできない既存DB側と schema が食い違うため）。
+  google_sub TEXT,
   handle_name VARCHAR(255) NOT NULL,
-  email VARCHAR(255),
+  -- email カラムは廃止した（tools/p56_drop_email.sql）。
+  -- 登録時に収集していたが、どこからも読まれない書き込み専用の死にカラムであり、
+  -- 使わない個人情報を保持し続ける理由が無いため列ごと落とした。
   chara_name VARCHAR(255) NOT NULL,
   status_intuition INTEGER NOT NULL DEFAULT 10,
   status_piloting INTEGER NOT NULL DEFAULT 10,
@@ -356,6 +370,12 @@ CREATE TABLE team_members (
 );
 -- 同一相手の二重編成を DB 側で禁止（squad.ts の重複チェックの最終防御）
 CREATE UNIQUE INDEX IF NOT EXISTS idx_team_members_owner_char ON team_members(owner_id, character_id);
+
+-- 1つの Google アカウントが複数キャラに紐づくのを DB 側で禁止する。
+-- 部分索引なので、未連携（NULL）の行がいくつあっても衝突しない。
+-- tools/p57_add_google_sub.sql と同一の定義にしてあること（既存DBとの drift 防止）。
+CREATE UNIQUE INDEX IF NOT EXISTS idx_characters_google_sub
+  ON characters (google_sub) WHERE google_sub IS NOT NULL;
 
 -- Initial seed data for units
 -- tokusyu は原作 unit_ini.cgi.txt 第24フィールドから名前対応で移植（P27）:

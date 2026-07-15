@@ -37,3 +37,6 @@ frontend/public/images/units/
 
 # wrangler の作業ディレクトリが public 配下に出来るとビルド成果物に混入するため
 frontend/public/**/.wrangler/
+
+# Auth情報
+.seacret

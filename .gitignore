@@ -34,3 +34,6 @@ frontend/public/images/units/
 # ローカル環境変数
 .env.local
 .env.*.local
+
+# wrangler の作業ディレクトリが public 配下に出来るとビルド成果物に混入するため
+frontend/public/**/.wrangler/

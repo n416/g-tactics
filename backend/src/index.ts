@@ -19,11 +19,30 @@ import { defenseApp } from './routes/defense'
 import { homeApp } from './routes/home'
 type Bindings = {
   DB: D1Database
+  // 機体画像を格納する R2。画像はリポジトリに含めず、デプロイとは独立して更新する
+  ASSETS_BUCKET: R2Bucket
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
 
 app.use('*', cors())
+
+// 機体画像を R2 から配信する。
+// 画像はビルド成果物に含めない（デプロイのたびに消えない／CI からのデプロイでも維持される）ため、
+// 静的アセットではなくこのルートで返す。wrangler.jsonc の run_worker_first で
+// /images/units/* を Worker 側に振り分けている。
+app.get('/images/units/:file', async (c) => {
+  const file = c.req.param('file')
+  const obj = await c.env.ASSETS_BUCKET.get(`units/${file}`)
+  if (!obj) return c.notFound()   // 画像が無いユニットはフロント側でプレースホルダに落ちる
+
+  const headers = new Headers()
+  obj.writeHttpMetadata(headers)
+  headers.set('etag', obj.httpEtag)
+  // 機体画像は不変（更新時はファイル名が変わる運用）なので長期キャッシュ
+  headers.set('cache-control', 'public, max-age=31536000, immutable')
+  return new Response(obj.body, { headers })
+})
 
 app.onError((err, c) => {
   console.error('[Hono Error]', err)

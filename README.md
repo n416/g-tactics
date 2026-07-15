@@ -33,12 +33,50 @@ npm run dev
 
 ### 環境変数
 
-`JWT_SECRET` は**必須**です。未設定だと認証が動作しません。
+| 変数 | 必須 | ローカル | 本番 |
+| --- | --- | --- | --- |
+| `JWT_SECRET` | **必須** | `backend/.dev.vars` | `npx wrangler secret put JWT_SECRET` |
+| `GOOGLE_CLIENT_SECRET` | Google 連携を使うなら必須 | `backend/.dev.vars` | `npx wrangler secret put GOOGLE_CLIENT_SECRET` |
+| `PUBLIC_ORIGIN` | ローカルのみ必須 | `backend/.dev.vars` に `http://localhost:5199` | **設定しない**（リクエストから導出される） |
+| `GOOGLE_CLIENT_ID` | Google 連携を使うなら必須 | `backend/wrangler.jsonc` の `vars`（公開情報なのでコミット済み） | 同左 |
 
-- ローカル: `backend/.dev.vars` に記述（このファイルは Git 管理外）
-- 本番: `npx wrangler secret put JWT_SECRET`
+雛形は `backend/.dev.vars.example` にあります。`.dev.vars` は Git 管理外です。
+**秘密鍵はリポジトリに置かないでください。** `GOOGLE_CLIENT_ID` だけは公開情報
+（同意画面へのURLに載ってブラウザに出る）なので `wrangler.jsonc` に置いてあります。
 
-秘密鍵はリポジトリに置かないでください。
+> **`.dev.vars` を編集したら wrangler dev を再起動すること。** 起動時にしか読まれないため、
+> 追記しても反映されず `redirect_uri` が古いまま送られてハマります。
+
+#### `PUBLIC_ORIGIN` が要る理由
+
+ローカルは Vite(5199) が `/api` を wrangler(8787) へプロキシしているため、**Worker から見た
+自分の origin(8787) と、ブラウザが実際にいる場所(5199) が食い違います**。Google に登録した
+リダイレクト URI と1文字でも違うと `redirect_uri_mismatch` で弾かれるので、ローカルでは
+明示的に上書きします。本番はプロキシが挟まらないので未設定でかまいません。
+
+### Google アカウント連携のセットアップ
+
+Google Cloud Console →「OAuth クライアント ID の作成」→ **ウェブ アプリケーション**。
+
+- **承認済みの JavaScript 生成元**: **空のまま**。サーバー側の認可コードフローなので不要です
+  （ブラウザで Google の JS を動かす方式でだけ必要）。
+- **承認済みのリダイレクト URI**: 以下の2つを登録します。
+
+```
+https://<本番のドメイン>/api/auth/google/callback
+http://localhost:5199/api/auth/google/callback
+```
+
+ローカルが 8787 ではなく **5199** なのは上記の理由です。8787 を指定すると、Google から
+戻った先が Vite の開発サーバーではなく Worker が配信する**ビルド済みの古い dist** になり、
+開発中の変更が反映されません。
+
+発行された値の置き場所は上の表のとおりです（ID は `wrangler.jsonc`、シークレットは
+`wrangler secret put` と `.dev.vars`）。反映に数分〜数時間かかることがあります。
+
+要求するスコープは **`openid` だけ**です。受け取るのは `sub`（このアプリ専用の不変な
+識別子）のみで、**メールアドレスも氏名も受け取らないし保存しません**。`characters.email` を
+「使わない個人情報を持たない」という理由で廃止しているため、ここで貰い始めると本末転倒になります。
 
 ### データベースの初期化
 
@@ -56,26 +94,63 @@ npx wrangler d1 execute gtactics-db --local --file ./seed_dev.sql   # 開発用�
 baseline を直接編集し、既存のローカル DB には `backend/tools/*.sql` の非破壊 ALTER で追随させます
 （既存ローカル DB の取りこぼしの修復は `tools/local_drift_repair.sql`）。
 
-### 稼働中の DB に必要な追随（P56: email カラムの廃止）
+### 稼働中の DB に必要な追随（P56 / P57）
 
-`characters.email` を廃止しました。登録時に集めていたものの、アプリのどこからも読まれない
-書き込み専用のカラムであり、使わない個人情報を保持し続ける理由が無いためです。
+**新規に作る DB では何もする必要はありません**（baseline に反映済み）。
+すでに稼働している DB（本番を含む）にだけ、一度ずつ流してください。
 
-baseline からは削除済みなので**新規に作る DB では何もする必要はありません**。
-すでに稼働している DB（本番を含む）にだけ、一度だけ流してください。
+| | 内容 | 性質 |
+| --- | --- | --- |
+| **P56** | `characters.email` の廃止 | **破壊的**（列とデータを削除） |
+| **P57** | `characters.google_sub` の追加（Google 連携用） | 非破壊（ADD COLUMN + 索引） |
 
 ```bash
 cd backend
-# 消えて困る値が入っていないか先に確認する
+
+# P56: 消えて困る値が入っていないか先に確認する
 npx wrangler d1 execute gtactics-db --remote --command "SELECT COUNT(*) FROM characters WHERE email IS NOT NULL AND email <> '';"
 
 npx wrangler d1 execute gtactics-db --local  --file ./tools/p56_drop_email.sql
 npx wrangler d1 execute gtactics-db --remote --file ./tools/p56_drop_email.sql
+
+npx wrangler d1 execute gtactics-db --local  --file ./tools/p57_add_google_sub.sql
+npx wrangler d1 execute gtactics-db --remote --file ./tools/p57_add_google_sub.sql
 ```
 
-> 他の `tools/*.sql` と違い、**本番にも流す必要がある**点に注意（列とデータを消す破壊的操作です）。
-> 本番だけ列が残ると baseline と実 DB が drift します。過去に `tournaments` で同じ事故が起きています
-> （`tools/local_drift_repair.sql` の経緯を参照）。
+> 他の `tools/*.sql` は「既存ローカル DB の追随用」ですが、**この2本は本番にも流す必要があります**。
+> 本番だけ列が食い違うと baseline と実 DB が drift します。過去に `tournaments` で同じ事故が
+> 起きています（`tools/local_drift_repair.sql` の経緯を参照）。
+
+`email` を廃止したのは、登録時に集めていたものの**アプリのどこからも読まれない書き込み専用の
+カラム**であり、使わない個人情報を保持し続ける理由が無いためです。
+
+`google_sub` の一意性は、baseline と `p57` の**両方で同一定義の部分索引**にしてあります
+（列に `UNIQUE` を書くと、`ADD COLUMN` しかできない既存 DB 側と schema が食い違うため）。
+
+## ログイン方法の設計
+
+ログイン手段は **パスワード** と **Google 連携** の2つで、どちらか一方があれば足ります。
+アカウントの設定画面は `/account`（ヘッダー右上のユーザーメニューから）。
+`/profile-edit` はゲーム側の設定（ランカー名・呼称・公開文・戦闘コメント）だけを扱います。
+
+### 触る前に知っておくべき原則: 最後のログイン手段は外せない
+
+**このゲームにはパスワードの再設定メールがありません**（メールアドレスを集めていないので
+作れません）。そのため、ログイン手段を失うと復旧手段がゼロになります。ここは以下の
+不変条件で守っています。**壊すと、利用者が自分のアカウントへ二度と入れなくなります。**
+
+- Google だけで登録した人は `password_hash = ''`。`verifyPassword('')` は必ず false を
+  返すので、パスワードでのログインは構造的に不可能です。
+  （SQLite は既存列の `NOT NULL` を落とせず、`characters.id` は30列から参照されているため
+  テーブル再構築は割に合わない、という判断）
+- **パスワードを持たない人の Google 連携解除は拒否します**（`/api/auth/google/unlink`）。
+- **`/api/edit` は、`password_hash` が `''` の場合に限り `current_password` なしで
+  初回設定を許します。** ここを「常に現在のパスワードを要求する」に戻すと、Google だけの人が
+  永久にパスワードを設定できず、結果として連携も解除できない詰みになります。
+- 1つの Google アカウントは1キャラまで（DB 側の部分索引でも担保）。
+
+この不変条件は `backend/test/google_auth.test.ts` と
+`frontend/tests/google-link.spec.ts` が見ています。
 
 ## パスワードの保存方式
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css'; // スタイル流用
+import { UnitImage } from '../components/UnitImage';
 
 interface FactionUnitData {
   id: number;
@@ -233,7 +234,7 @@ export const FactionUnit: React.FC = () => {
               <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
                 <h2 style={{ color: '#00f2fe', margin: '0 0 1rem 0' }}>{factionUnit.custom_name || factionUnit.base_name}</h2>
                 <div style={{ width: '100%', height: '240px', background: 'url(/images/luna.gif) bottom center no-repeat', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: '1rem', border: '1px solid #444' }}>
-                  {factionUnit.image && <img src={`/images/units/${factionUnit.image}`} alt="unit" />}
+                  {factionUnit.image && <UnitImage file={factionUnit.image} alt="unit" />}
                 </div>
               </div>
 

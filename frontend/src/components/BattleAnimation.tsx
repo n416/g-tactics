@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './BattleAnimation.css';
+import { UnitImage } from './UnitImage';
 
 export interface LSideSnap {
   hp: number; maxHp: number; en: number; maxEn: number; ammo: number;
@@ -152,7 +153,7 @@ export const BattleAnimation: React.FC<BattleAnimationProps> = ({ events = [], m
           <div className="combatant-panel attacker">
             {attackerImage && (
               <div className={`unit-portrait ${currentEvent?.attacker?.hit ? 'portrait-hit' : ''}`}>
-                <img src={`/images/units/${attackerImage}`} alt="" />
+                <UnitImage file={attackerImage} alt="" />
               </div>
             )}
             <div className="pilot-name">{currentEvent?.attackerName || meta?.attackerName || 'UNKNOWN'}</div>
@@ -184,7 +185,7 @@ export const BattleAnimation: React.FC<BattleAnimationProps> = ({ events = [], m
           <div className="combatant-panel defender">
             {defenderImage && (
               <div className={`unit-portrait portrait-right ${currentEvent?.defender?.hit ? 'portrait-hit' : ''}`}>
-                <img src={`/images/units/${defenderImage}`} alt="" />
+                <UnitImage file={defenderImage} alt="" />
               </div>
             )}
             <div className="pilot-name">{currentEvent?.defenderName || meta?.defenderName || 'UNKNOWN'}</div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css'; 
+import { UnitImage } from '../components/UnitImage';
 
 interface HangarUnit {
   hangar_id: number;
@@ -273,7 +274,7 @@ export const Hangar: React.FC = () => {
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                     <div style={{ flex: 1, minWidth: '250px' }}>
                         {unit.image && (
-                            <img src={'/images/units/' + unit.image} alt={unit.name} style={{ width: '100%', height: 'auto', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)', marginBottom: '1rem' }} />
+                            <UnitImage file={unit.image} alt={unit.name} style={{ width: '100%', height: 'auto', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)', marginBottom: '1rem' }} />
                         )}
                         <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '4px', fontSize: '0.9rem', lineHeight: '1.6', color: '#ddd', fontStyle: 'italic' }}>
                             {unit.description || '機体の解説はありません。'}

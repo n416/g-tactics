@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { showToast } from '../components/toast';
 import { Modal } from '../components/Modal';
 import './Register.css';
+import { UnitImage } from '../components/UnitImage';
 
 interface ProfileData {
   id: string;
@@ -197,7 +198,7 @@ export const Profile: React.FC = () => {
               </div>
               <div style={{ display: 'flex', gap: '15px' }}>
                 <div style={{ width: '100px', height: '100px', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {profile.unit_image ? <img src={`/images/units/${profile.unit_image}`} style={{ maxWidth: '100%', maxHeight: '100%' }} /> : <span style={{ color: '#888', fontSize: '0.8rem' }}>No Image</span>}
+                  {profile.unit_image ? <UnitImage file={profile.unit_image} style={{ maxWidth: '100%', maxHeight: '100%' }} /> : <span style={{ color: '#888', fontSize: '0.8rem' }}>No Image</span>}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '1.2rem', color: '#4facfe', fontWeight: 'bold' }}>{profile.unit_name || 'Unknown'}</div>
@@ -298,7 +299,7 @@ export const Profile: React.FC = () => {
                 {hangarUnits.map(unit => (
                   <div key={unit.hangar_id} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '4px' }}>
                     <div style={{ width: '60px', height: '60px', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {unit.image ? <img src={`/images/units/${unit.image}`} style={{ maxWidth: '100%', maxHeight: '100%' }} /> : <span style={{ fontSize: '0.7rem' }}>No Image</span>}
+                      {unit.image ? <UnitImage file={unit.image} style={{ maxWidth: '100%', maxHeight: '100%' }} /> : <span style={{ fontSize: '0.7rem' }}>No Image</span>}
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ color: '#fff', fontWeight: 'bold' }}>{unit.name}</div>

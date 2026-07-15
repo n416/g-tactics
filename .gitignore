@@ -30,3 +30,7 @@ frontend/public/images/units/
 
 # ローカル開発ツール設定
 .claude/
+
+# ローカル環境変数
+.env.local
+.env.*.local

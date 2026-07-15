@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css';
+import { UnitImage } from '../components/UnitImage';
 
 // P43-B1: 原作 ＡＥ月面工場（manual/images/t_anahim.jpg）準拠の一枚画面。
 // 処理は anahaim_act.cgi 準拠の既存API（/api/anaheim/*, /api/buy_unit ほか）を使う。
@@ -338,7 +339,7 @@ export const Anaheim: React.FC = () => {
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
           <div style={{ width: '180px', minHeight: '160px', background: 'rgba(255,255,255,0.05)', border: '1px solid #555', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             {user.unit_image
-              ? <img src={`/images/units/${user.unit_image}`} alt={user.unit_name} style={{ maxWidth: '100%', maxHeight: '160px' }} />
+              ? <UnitImage file={user.unit_image} alt={user.unit_name} style={{ maxWidth: '100%', maxHeight: '160px' }} />
               : <span style={{ color: '#666', fontSize: '0.8rem' }}>No Image</span>}
           </div>
           <div style={{ flex: 1, minWidth: '300px' }}>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css'; // Reusing cyber theme CSS
+import { UnitImage } from '../components/UnitImage';
 
 interface User {
   id: string;
@@ -432,7 +433,7 @@ export const MyPage: React.FC = () => {
                 <div style={{ width: '120px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ width: '120px', height: '120px', background: 'rgba(0,0,0,0.5)', border: '1px solid #444', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                     {user.unit_image ? (
-                      <img src={`/images/units/${user.unit_image}`} alt={user.unit_name || 'Unit'} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      <UnitImage file={user.unit_image} alt={user.unit_name || 'Unit'} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     ) : (
                       <span style={{ color: '#888', fontSize: '0.8rem' }}>No Image</span>
                     )}
@@ -676,7 +677,7 @@ export const MyPage: React.FC = () => {
           <div className="glass-panel" style={{ width: '90%', maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
             <h3 className="cyber-title" style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#4bc8ff' }}>{user.unit_name}</h3>
             {user.unit_image && (
-              <img src={`/images/units/${user.unit_image}`} alt={user.unit_name} style={{ maxWidth: '160px', display: 'block', margin: '0 auto 1rem' }} />
+              <UnitImage file={user.unit_image} alt={user.unit_name} style={{ maxWidth: '160px', display: 'block', margin: '0 auto 1rem' }} />
             )}
             <div style={{ color: '#ddd', lineHeight: 1.8, fontSize: '0.95rem', fontStyle: 'italic' }}>
               {(user as any).unit_description || 'この機体の解説データはありません。'}

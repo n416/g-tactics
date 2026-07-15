@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BattleAnimation, type BattleEvent, type BattleMeta } from '../components/BattleAnimation';
+import { UnitImage } from '../components/UnitImage';
 
 const TerrainMap: Record<number, string> = { 1: '地上', 2: '水中', 3: '宇宙', 4: '空中', 5: '仮想空間' };
 
@@ -287,7 +288,7 @@ const Battle: React.FC = () => {
             <div style={{ position: 'relative', overflow: 'hidden', border: '1px solid var(--border-color)', borderRadius: '4px', background: '#050510' }}>
                <div style={{ position: 'relative', zIndex: 1, padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   {champ.unit_image && (
-                    <img src={`/images/units/${champ.unit_image}`} alt="unit" style={{ width: '150px', objectFit: 'contain' }} />
+                    <UnitImage file={champ.unit_image} alt="unit" style={{ width: '150px', objectFit: 'contain' }} />
                   )}
                   <div>
                     <div style={{ color: 'var(--accent-color)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>CURRENT CHAMPION</div>

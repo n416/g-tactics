@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { showConfirm } from '../components/confirm';
 import './Team.css';
+import { UnitImage } from '../components/UnitImage';
 
 interface TeamMember {
   id: number;
@@ -264,7 +265,7 @@ export const Team: React.FC = () => {
                     <div className="card-content">
                       {w.unit_image && (
                         <div className="unit-image-wrapper">
-                          <img src={`/images/units/${w.unit_image}`} alt={w.unit_name} className="unit-image" />
+                          <UnitImage file={w.unit_image} alt={w.unit_name} className="unit-image" />
                         </div>
                       )}
                       <div className="char-info">
@@ -313,7 +314,7 @@ export const Team: React.FC = () => {
                     <div key={c.id} className="candidate-card">
                       <div className="card-content">
                         <div className="unit-image-wrapper">
-                          <img src={`/images/units/${c.unit_image || 'ms_c_0012.gif'}`} alt={c.unit_name} className="unit-image" />
+                          <UnitImage file={c.unit_image} alt={c.unit_name} className="unit-image" />
                         </div>
                         <div className="char-info">
                           <div className="char-name" style={{ color: '#e5e7eb' }}>

@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "backend",
+  "name": "g-tactics",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-02",
   // "compatibility_flags": [
@@ -25,7 +25,7 @@
     {
       "binding": "DB",
       "database_name": "gtactics-db",
-      "database_id": "local-dev"
+      "database_id": "ff0117cd-46bf-4983-b5eb-7c9dc22273e8"
     }
   ],
   // "ai": {

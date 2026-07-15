@@ -45,9 +45,12 @@ npm run dev
 ```bash
 cd backend
 npx wrangler d1 execute gtactics-db --local --file ./migrations/0001_baseline.sql
-npx wrangler d1 execute gtactics-db --local --file ./seed_units.sql
-npx wrangler d1 execute gtactics-db --local --file ./seed_dev.sql   # 開発用データ
+npx wrangler d1 execute gtactics-db --local --file ./seed_dev.sql   # 開発用のテストキャラ
 ```
+
+`0001_baseline.sql` はスキーマに加えて機体マスタ（units 911件 / items 396件）も含むため、
+これ1本でゲームが動く状態になります。`seed_dev.sql` は開発用のテストキャラなので、
+**本番には流さないでください**。
 
 `migrations/0001_baseline.sql` がスキーマの単一の正です。スキーマを変更する場合は
 baseline を直接編集し、既存のローカル DB には `backend/tools/*.sql` の非破壊 ALTER で追随させます

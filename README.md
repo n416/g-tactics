@@ -56,6 +56,42 @@ npx wrangler d1 execute gtactics-db --local --file ./seed_dev.sql   # 開発用�
 baseline を直接編集し、既存のローカル DB には `backend/tools/*.sql` の非破壊 ALTER で追随させます
 （既存ローカル DB の取りこぼしの修復は `tools/local_drift_repair.sql`）。
 
+### 稼働中の DB に必要な追随（P56: email カラムの廃止）
+
+`characters.email` を廃止しました。登録時に集めていたものの、アプリのどこからも読まれない
+書き込み専用のカラムであり、使わない個人情報を保持し続ける理由が無いためです。
+
+baseline からは削除済みなので**新規に作る DB では何もする必要はありません**。
+すでに稼働している DB（本番を含む）にだけ、一度だけ流してください。
+
+```bash
+cd backend
+# 消えて困る値が入っていないか先に確認する
+npx wrangler d1 execute gtactics-db --remote --command "SELECT COUNT(*) FROM characters WHERE email IS NOT NULL AND email <> '';"
+
+npx wrangler d1 execute gtactics-db --local  --file ./tools/p56_drop_email.sql
+npx wrangler d1 execute gtactics-db --remote --file ./tools/p56_drop_email.sql
+```
+
+> 他の `tools/*.sql` と違い、**本番にも流す必要がある**点に注意（列とデータを消す破壊的操作です）。
+> 本番だけ列が残ると baseline と実 DB が drift します。過去に `tournaments` で同じ事故が起きています
+> （`tools/local_drift_repair.sql` の経緯を参照）。
+
+## パスワードの保存方式
+
+`src/utils/password.ts` が唯一の正です。**PBKDF2-HMAC-SHA256 / 60万回 / ソルト16バイト**
+（保存形式 `pbkdf2$<反復回数>$<salt_b64>$<hash_b64>`）。
+
+- 以前は無ソルトの SHA-256 でした。ログインは旧形式も受け付け、**認証に成功した時点で
+  自動的に新形式へ書き換えます**。既存アカウントは何もしなくてもそのまま使えます。
+- 反復回数は保存値の中に持たせてあるので、後から引き上げても既存行を照合できます。
+- Workers はネイティブモジュールを読めないため bcrypt/argon2 は使えません。PBKDF2 は
+  WebCrypto 標準で、Workers でもテストの Node でも同じコードが動きます。
+- **60万回は Workers Paid 前提**です（実測 約200ms/回。CPU 上限は既定30秒）。
+  Free プラン（CPU 上限 10ms）へ移る場合はこの回数では超過します。
+- `scripts/make_admin.mjs` は `node:crypto` で同じ形式を作ります。ここがズレると
+  作った管理者がログインできなくなるため、両者の一致を `test/password.test.ts` が検証しています。
+
 ## テスト・型チェック
 
 ```bash
@@ -64,9 +100,15 @@ npm test               # vitest
 npm run typecheck
 
 cd ../frontend
-npx tsc --noEmit
-npx playwright test    # E2E
+npm run typecheck      # tsc -b
+npx playwright test    # E2E（dev server を起動しておくこと）
 ```
+
+> **frontend で `npx tsc --noEmit` を使わないこと。** `frontend/tsconfig.json` は
+> `{"files": [], "references": [...]}` のソリューション構成なので、`-b` を付けずに走らせると
+> **src 配下を1ファイルも読まずに成功します**（型エラーがあっても通る）。
+> 実体は `tsconfig.app.json` 側にあります。`npm run typecheck`（= `tsc -b`）を使ってください。
+> backend は `tsconfig.json` が実体なので `tsc --noEmit` で問題ありません。
 
 ## 管理者アカウント
 

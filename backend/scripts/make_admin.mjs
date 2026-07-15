@@ -1,18 +1,25 @@
 // ============================================================
 // 管理者アカウントの作成／昇格（ローカル・本番の両対応）
 //
-//   npm run admin -- --id=foo --local          既存キャラを管理者に昇格
+//   npm run admin -- --id=foo --local          既存キャラを管理者に昇格【推奨】
 //   npm run admin -- --id=foo --remote         （本番）
 //   npm run admin -- --id=foo --handle=名前 --chara=キャラ名 --create --local
-//                                              新規に管理者キャラを作成
+//                                              新規に管理者キャラを作成【非常用】
+//
+// ★ 昇格(サイトで登録 → このコマンドで昇格)を推奨する。--create は本体の登録処理を通らないため、
+//   auth.ts の register が行う以下が再現されない:
+//     - ランダムな特性を Lv1〜9 で1つ付与する（--create のキャラは特性を持たない＝戦闘計算に影響）
+//     - ステータス合計値の上限チェック
+//   --create は「サイトに登録導線が無い」等の非常用と考えること。
 //
 // パスワードは引数で渡さない（シェル履歴に残るため）。実行時にプロンプトで入力するか、
 // 環境変数 ADMIN_PASSWORD で渡す。
 //
 // 実装メモ:
 // - パスワードは本体(auth.ts)と同じ SHA-256 hex・ソルト無しで作る。方式を変えるとログインできない。
-// - SQL は一時ファイル(UTF-8)に書いて --file で流す。--command でコマンドラインに日本語を載せると
-//   シェル(特に Windows の Git Bash)が文字コードを壊し、名前が化けたまま DB に入る。
+// - 読み取り(SELECT)は --command を使う。--remote の --file は実行結果の行ではなく
+//   「実行統計」(Total queries executed 等)を返すため、行が取れず存在判定を誤る。
+// - 書き込みは一時ファイル(UTF-8)に書いて --file で流す。日本語を含むため。
 // - 文字列は '' エスケープして埋め込む。
 // ============================================================
 import { execFileSync } from 'node:child_process';
@@ -51,27 +58,43 @@ const sha256Hex = (s) => createHash('sha256').update(s, 'utf8').digest('hex');
 const HERE = resolve(fileURLToPath(import.meta.url), '..');
 const WRANGLER_JS = resolve(HERE, '../node_modules/wrangler/bin/wrangler.js');
 
-function exec(sqlText) {
+function runWrangler(extraArgs) {
   if (!existsSync(WRANGLER_JS)) die('wrangler が見つかりません。backend で npm install を実行してください。');
+  return execFileSync(
+    process.execPath, // node（Windows では .cmd を execFileSync から起動できないため npx は使わない）
+    [WRANGLER_JS, 'd1', 'execute', DB_NAME, isRemote ? '--remote' : '--local', ...extraArgs, '--json'],
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], cwd: resolve(HERE, '..') }
+  );
+}
+
+// 書き込み用。SQL を一時ファイル(UTF-8)経由で流す＝日本語が壊れない。
+// ※--file は --remote だと「実行統計」を返し、SELECT の行は返らないので読み取りには使えない。
+function exec(sqlText) {
   const dir = mkdtempSync(join(tmpdir(), 'gt-admin-'));
   const file = join(dir, 'q.sql');
-  writeFileSync(file, sqlText, 'utf8'); // UTF-8 で書く＝日本語が壊れない
+  writeFileSync(file, sqlText, 'utf8');
   try {
-    return execFileSync(
-      process.execPath, // node
-      [WRANGLER_JS, 'd1', 'execute', DB_NAME, isRemote ? '--remote' : '--local', '--file', file, '--json'],
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], cwd: resolve(HERE, '..') }
-    );
+    return runWrangler(['--file', file]);
   } finally {
     try { unlinkSync(file); } catch {}
   }
 }
 
+// 読み取り用。--command を使う（--remote の --file は実行統計しか返さないため）。
+// SQL は execFileSync の引数配列で渡す＝シェルを介さないので壊れない。
+// 呼び出し側の SELECT は id しか埋め込まない（id は英数字に検証済み）ため日本語は乗らない。
 function query(sql) {
-  const out = exec(sql);
-  const m = out.match(/\[[\s\S]*\]/);
-  if (!m) return [];
-  try { return JSON.parse(m[0])[0]?.results ?? []; } catch { return []; }
+  const out = runWrangler(['--command', sql]);
+  // wrangler は JSON の前に進捗行や警告(例: "▲ [WARNING] ...")を出すため、
+  // 単純な [ ... ] のマッチでは壊れる。JSON 配列が始まる行から後ろだけを取る。
+  const start = out.search(/^\[/m);
+  if (start < 0) return [];
+  try {
+    const parsed = JSON.parse(out.slice(start));
+    return parsed[0]?.results ?? [];
+  } catch {
+    return [];
+  }
 }
 
 function promptHidden(q) {
@@ -112,10 +135,17 @@ const handle = args.handle;
 const chara = args.chara;
 if (!handle || !chara) die('--create には --handle と --chara が必要です。');
 
+console.warn(
+  '⚠ --create は本体の登録処理(auth.ts register)を通りません。\n' +
+  '  作成されるキャラは「特性なし」になります（通常の登録ではランダムな特性が Lv1〜9 で1つ付きます）。\n' +
+  '  可能なら、サイトで新規登録してから --create 無しで昇格してください。'
+);
+
 const password = process.env.ADMIN_PASSWORD || (await promptHidden('パスワード: '));
 if (!password || password.length < 8) die('パスワードは8文字以上にしてください。');
 
-// 列と既定値は auth.ts の register に合わせる（unit_id=0 は初期機体、money は初期資金）
+// 列と既定値は auth.ts の register に合わせる（money=1000・unit_id=0・skills={}）。
+// traits だけは register がランダム付与するため再現しない（上の警告を参照）。
 const sql = `
 INSERT INTO characters
   (id, password_hash, handle_name, email, chara_name,

@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+build/
+*.tsbuildinfo
+
+# wrangler / local D1
+.wrangler/
+.dev.vars
+
+# test artifacts
+playwright-report/
+test-results/
+coverage/
+
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# logs
+*.log
+npm-debug.log*
+
+# 機体画像はリポジトリに含めない（ワーキングディレクトリにのみ配置する）
+frontend/public/images/units/
+
+# ローカル開発ツール設定
+.claude/

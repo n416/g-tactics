@@ -287,32 +287,30 @@ export const Profile: React.FC = () => {
         <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#888', marginTop: 4 }}>{privateMessage.length}/100</div>
       </Modal>
 
-      {showHangarModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowHangarModal(false)}>
-          <div className="glass-panel" style={{ width: '90%', maxWidth: '500px', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-            <h3 className="cyber-title" style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#4bc8ff' }}>格納庫（所有機体一覧）</h3>
-            
-            {hangarUnits.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>格納されている機体はありません。</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {hangarUnits.map(unit => (
-                  <div key={unit.hangar_id} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '4px' }}>
-                    <div style={{ width: '60px', height: '60px', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {unit.image ? <UnitImage file={unit.image} style={{ maxWidth: '100%', maxHeight: '100%' }} /> : <span style={{ fontSize: '0.7rem' }}>No Image</span>}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ color: '#fff', fontWeight: 'bold' }}>{unit.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#aaa' }}>HP: {unit.hp} / EN: {unit.en}</div>
-                    </div>
-                  </div>
-                ))}
+      <Modal
+        open={showHangarModal}
+        onClose={() => setShowHangarModal(false)}
+        title="格納庫（所有機体一覧）"
+        actions={<button className="text-btn" onClick={() => setShowHangarModal(false)}>閉じる</button>}
+      >
+        {hangarUnits.length === 0 ? (
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>格納されている機体はありません。</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {hangarUnits.map(unit => (
+              <div key={unit.hangar_id} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--panel-inset)', padding: '10px', borderRadius: '4px' }}>
+                <div style={{ width: '60px', height: '60px', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+                  {unit.image ? <UnitImage file={unit.image} style={{ maxWidth: '100%', maxHeight: '100%' }} /> : <span style={{ fontSize: '0.7rem' }}>No Image</span>}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 'bold' }}>{unit.name}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>HP: {unit.hp} / EN: {unit.en}</div>
+                </div>
               </div>
-            )}
-            <button onClick={() => setShowHangarModal(false)} className="text-btn" style={{ width: '100%', marginTop: '1.2rem', padding: '0.6rem', border: '1px solid #aaa', borderRadius: '4px' }}>閉じる</button>
+            ))}
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 };

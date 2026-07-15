@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Modal } from '../components/Modal';
 import './Register.css';
 import { UnitImage } from '../components/UnitImage';
 
@@ -531,46 +532,48 @@ export const Anaheim: React.FC = () => {
       </div>
 
       {/* 機体解説モーダル */}
-      {showUnitDesc && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }} onClick={() => setShowUnitDesc(false)}>
-          <div className="glass-panel" style={{ maxWidth: '500px', width: '90%' }} onClick={e => e.stopPropagation()}>
-            <h2 className="cyber-title" style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>{user.unit_custom_name || user.unit_name}</h2>
-            <p style={{ color: '#fff', whiteSpace: 'pre-line' }}>{user.unit_description || '解説はありません。'}</p>
-            <div style={{ textAlign: 'right', marginTop: '1rem' }}>
-              <button className="text-btn" onClick={() => setShowUnitDesc(false)}>閉じる</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showUnitDesc}
+        onClose={() => setShowUnitDesc(false)}
+        title={user.unit_custom_name || user.unit_name}
+        actions={<button className="text-btn" onClick={() => setShowUnitDesc(false)}>閉じる</button>}
+      >
+        <p style={{ color: 'var(--text-secondary)', whiteSpace: 'pre-line' }}>
+          {user.unit_description || '解説はありません。'}
+        </p>
+      </Modal>
 
-      {/* 購入確認モーダル */}
-      {confirmBuyOpen && selectedUnit && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div className="glass-panel" style={{ maxWidth: '400px', width: '90%', textAlign: 'center' }}>
-            {selectedUnit.id === 9999 ? (
-              <>
-                <h2 className="cyber-title" style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#ff6b6b' }}>キャラクターリセット</h2>
-                <p style={{ color: '#fff', marginBottom: '1rem' }}>
-                  本当にキャラクターをリセットしますか？<br />
-                  <span style={{ color: '#ff4b4b', fontSize: '0.9rem' }}>能力・所持金・機体が初期化されます。復旧はできません。</span>
-                </p>
-              </>
-            ) : (
-              <>
-                <h2 className="cyber-title" style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>機体変更の確認</h2>
-                <p style={{ color: '#fff', marginBottom: '1rem' }}>
-                  {selectedUnit.name} を {selectedUnit.price}pt で購入し、搭乗しますか？<br />
-                  <span style={{ color: '#ff4b4b', fontSize: '0.9rem' }}>※現在の機体は格納庫に保管されます</span>
-                </p>
-              </>
-            )}
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <button className="submit-btn" onClick={handleBuyUnit} style={{ flex: 1 }}>YES</button>
-              <button className="submit-btn" onClick={() => setConfirmBuyOpen(false)} style={{ flex: 1, background: 'transparent', border: '1px solid #aaa', color: '#aaa' }}>NO</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 購入確認モーダル。キャラクターリセットは復旧できないので閉じにくくしてある */}
+      <Modal
+        open={confirmBuyOpen && !!selectedUnit}
+        onClose={() => setConfirmBuyOpen(false)}
+        title={selectedUnit?.id === 9999 ? 'キャラクターをリセットする' : '機体変更の確認'}
+        dismissable={selectedUnit?.id !== 9999}
+        actions={
+          <>
+            <button className="text-btn" onClick={() => setConfirmBuyOpen(false)}>キャンセル</button>
+            <button
+              className="submit-btn"
+              onClick={handleBuyUnit}
+              style={selectedUnit?.id === 9999 ? { background: 'var(--danger)' } : undefined}
+            >
+              {selectedUnit?.id === 9999 ? 'リセットする' : '購入して搭乗する'}
+            </button>
+          </>
+        }
+      >
+        {selectedUnit?.id === 9999 ? (
+          <p style={{ color: 'var(--text-primary)' }}>
+            本当にキャラクターをリセットしますか？<br />
+            <span style={{ color: 'var(--danger)', fontSize: '0.9rem' }}>能力・所持金・機体が初期化されます。復旧はできません。</span>
+          </p>
+        ) : (
+          <p style={{ color: 'var(--text-primary)' }}>
+            {selectedUnit?.name} を {selectedUnit?.price}pt で購入し、搭乗しますか？<br />
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>※現在の機体は格納庫に保管されます</span>
+          </p>
+        )}
+      </Modal>
     </div>
   );
 };

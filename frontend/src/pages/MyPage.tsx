@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css'; // Reusing cyber theme CSS
 import { UnitImage } from '../components/UnitImage';
+import { Modal } from '../components/Modal';
 
 interface User {
   id: string;
@@ -61,6 +62,10 @@ interface User {
   terrain_water?: number;
   terrain_space?: number;
   terrain_air?: number;
+
+  /** Google 連携済みか。sub 自体はサーバーから返さない（識別子なので） */
+  google_linked?: boolean;
+  has_password?: boolean;
 }
 
 export const MyPage: React.FC = () => {
@@ -72,9 +77,6 @@ export const MyPage: React.FC = () => {
   const [showInventory, setShowInventory] = useState(false);
   const [targetSlot, setTargetSlot] = useState<'weapon_id' | 'item1_id' | 'item2_id' | null>(null);
 
-  // Private Messages
-  const [unreadCount, setUnreadCount] = useState(0);
-
   // チームメンバー（実データ: /api/squad）
   const [squad, setSquad] = useState<any[]>([]);
   // 機体解説モーダル
@@ -84,6 +86,31 @@ export const MyPage: React.FC = () => {
   const [participants, setParticipants] = useState<any[]>([]);
   const [transformTargets, setTransformTargets] = useState<any[]>([]);
   const [isChampion, setIsChampion] = useState(false);
+  const [linking, setLinking] = useState(false);
+
+  /** Google 連携を開始する。
+   * Google へのリダイレクトでは Authorization ヘッダを運べないので、
+   * 先に認証付きでこのAPIを叩いて署名済みのURLを作ってもらい、そこへ飛ぶ。 */
+  const handleLinkGoogle = async () => {
+    setLinking(true);
+    try {
+      const token = localStorage.getItem('gtactics_token');
+      const res = await fetch('/api/auth/google/link-start', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json()) as any;
+      if (data.success && data.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data.message || 'Google 連携を開始できませんでした');
+        setLinking(false);
+      }
+    } catch {
+      setError('Google 連携を開始できませんでした');
+      setLinking(false);
+    }
+  };
 
   // 現優勝者なら整備で「優勝戦反映」を出す
   useEffect(() => {
@@ -115,16 +142,6 @@ export const MyPage: React.FC = () => {
       const res = await fetch('/api/squad', { headers: { 'Authorization': `Bearer ${token}` } });
       const data = (await res.json()) as any;
       if (data.success) setSquad(data.squad);
-    } catch (err) {}
-  };
-
-  // 伝言の未読件数のみ取得（到着アラート＝赤ポチ用）。伝言記録の表示・既読化はステ詳細(Profile)へ集約。
-  const fetchPrivateMessages = async () => {
-    try {
-      const token = localStorage.getItem('gtactics_token');
-      const countRes = await fetch('/api/messages/private/unread-count', { headers: { 'Authorization': `Bearer ${token}` } });
-      const countData = await countRes.json() as any;
-      if (countData.success) setUnreadCount(countData.count);
     } catch (err) {}
   };
 
@@ -204,40 +221,9 @@ export const MyPage: React.FC = () => {
 
   useEffect(() => {
     fetchMe();
-    fetchPrivateMessages();
     fetchSquad();
     fetchParticipantsAndTransforms();
   }, [navigate]);
-
-  // P36: キャラクター削除（確認のためキャラクター名の入力を要求）
-  const handleDeleteCharacter = async () => {
-    if (!user) return;
-    const input = window.prompt(`本当に削除しますか？取り消せません。\n確認のためキャラクター名「${user.chara_name}」を入力してください`);
-    if (input === null) return;
-    try {
-      const token = localStorage.getItem('gtactics_token');
-      const res = await fetch('/api/delete-character', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ confirm_name: input })
-      });
-      const data = (await res.json()) as any;
-      if (data.success) {
-        localStorage.removeItem('gtactics_token');
-        navigate('/');
-      } else {
-        setError(data.message);
-        setTimeout(() => setError(''), 3000);
-      }
-    } catch (err) {
-      setError('削除処理に失敗しました');
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('gtactics_token');
-    navigate('/');
-  };
 
   // 機体整備（原作 action.cgi seibi。コストはサーバー側で原作式＋器用割引を計算）
   const handleRepair = async () => {
@@ -342,41 +328,47 @@ export const MyPage: React.FC = () => {
   const winRate = totalBattles > 0 ? ((winBattles / totalBattles) * 100).toFixed(1) : '0.0';
 
   return (
-    <div className="register-container" style={{ padding: '20px', minHeight: '100vh', display: 'flex', alignItems: 'flex-start' }}>
-      <div className="glass-panel" style={{ maxWidth: '1000px', width: '100%', margin: '0 auto' }}>
-        
-        {/* HEADER */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+    <div className="register-container">
+      <div className="glass-panel" style={{ maxWidth: 'var(--content-max)', width: '100%' }}>
+
+        {/* HEADER
+         * ログアウト・管理画面・未読伝言バッジは AppLayout のヘッダーへ移した
+         * （どのページからでも触れる必要があるため）。ここに残すのはこの画面固有の操作だけ。 */}
+        <div className="page-head">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <h1 className="cyber-title" style={{ fontSize: '1.5rem', marginBottom: '5px' }}>{user.handle_name}【{user.rank || '-'}】用ステータス画面</h1>
-              {unreadCount > 0 && (
-                <div
-                  style={{ background: '#e53e3e', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8rem', cursor: 'pointer', animation: 'pulse 2s infinite' }}
-                  onClick={() => navigate(`/profile/${user.id}`)}
-                  title="クリックで自分のステ詳細を開き、伝言を確認します"
-                >
-                  伝言が {unreadCount} 件届いています！（クリックでステ詳細へ）
-                </div>
-              )}
-            </div>
+            <h1 className="cyber-title" style={{ fontSize: '1.5rem', textAlign: 'left', marginBottom: 0 }}>
+              {user.handle_name}【{user.rank || '-'}】
+            </h1>
             {(user as any).faction_notice && (
-              <div style={{ fontSize: '0.9rem', color: '#4bff7d' }}>
+              <div style={{ fontSize: '0.9rem', color: 'var(--success)', marginTop: '0.35rem' }}>
                 【{(user as any).faction_name}より通達】{(user as any).faction_notice}
               </div>
             )}
           </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            {user.is_admin === 1 && (
-              <button onClick={() => navigate('/admin')} style={{ padding: '6px 12px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                ADMIN
-              </button>
-            )}
-            <button onClick={() => navigate('/profile-edit')} className="text-btn" style={{ color: '#4facfe' }}>プロフィール変更</button>
-            <button onClick={handleLogout} className="text-btn" style={{ color: '#ff4b4b' }}>LOGOUT</button>
-            <button onClick={handleDeleteCharacter} className="text-btn" style={{ color: '#7f1d1d', marginLeft: '0.5rem' }} title="キャラクターを完全に削除します（取り消し不可）">キャラ削除</button>
-          </div>
+          {/* プロフィール変更・キャラ削除は、ヘッダー右上のユーザーメニュー →
+            * アカウント設定 / プロフィール変更 に集約した。ここには置かない。 */}
         </div>
+
+        {/* Google 未連携なら勧める。
+          * このゲームにはパスワードの再設定手段が無い（メールアドレスを集めていないため）。
+          * Google を連携しておくことが、事実上ただ一つの復旧手段になる。 */}
+        {user.google_linked === false && (
+            <div className="link-google-banner">
+              <div>
+                <b>Google アカウントを連携しませんか？</b>
+                <span>パスワードを忘れた場合、連携していないと復旧できません。次回からは1クリックでログインできるようになります。</span>
+              </div>
+              <button className="google-btn" style={{ width: 'auto' }} onClick={handleLinkGoogle} disabled={linking}>
+                <svg viewBox="0 0 48 48" aria-hidden="true">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                {linking ? '接続中…' : 'Google を連携する'}
+              </button>
+            </div>
+        )}
 
         {sysMsg && (
           <div style={{ background: 'rgba(72, 187, 120, 0.2)', color: '#48bb78', padding: '10px', borderRadius: '4px', marginBottom: '1rem', border: '1px solid #48bb78', textAlign: 'center' }}>
@@ -400,9 +392,9 @@ export const MyPage: React.FC = () => {
           </div>
         </div>
 
-        {/* MAIN LAYOUT - 2 COLUMNS */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-          
+        {/* MAIN LAYOUT - 2 COLUMNS（900px 以下では1カラムに畳む） */}
+        <div className="grid-2" style={{ marginBottom: '20px' }}>
+
           {/* LEFT COLUMN: UNIT DATA */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             
@@ -428,7 +420,7 @@ export const MyPage: React.FC = () => {
             <div className="stats-allocation" style={{ margin: 0, flex: 1 }}>
               <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#aaa', fontSize: '0.9rem', textAlign: 'center' }}>搭乗機体データ</h3>
               
-              <div style={{ display: 'flex', gap: '20px' }}>
+              <div className="row-wrap" style={{ gap: '20px' }}>
                 {/* Unit Image & Actions */}
                 <div style={{ width: '120px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ width: '120px', height: '120px', background: 'rgba(0,0,0,0.5)', border: '1px solid #444', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
@@ -457,27 +449,27 @@ export const MyPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Unit Stats */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #333', paddingBottom: '4px' }}>
-                    <span style={{ color: '#888' }}>ユニット</span>
-                    <span style={{ color: '#4bff7d', fontWeight: 'bold' }}>{user.unit_name}</span>
-                    <button onClick={() => setShowUnitDesc(true)} style={{ background: '#444', color: '#fff', border: 'none', padding: '2px 8px', fontSize: '0.7rem', cursor: 'pointer' }}>機体解説</button>
+                {/* Unit Stats（幅が足りなくなったら画像の下へ回り込ませる） */}
+                <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div className="kv-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>ユニット</span>
+                    <span style={{ color: 'var(--success)', fontWeight: 'bold' }}>{user.unit_name}</span>
+                    <button onClick={() => setShowUnitDesc(true)} className="mini-btn">機体解説</button>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #333', paddingBottom: '4px' }}>
-                    <span style={{ color: '#888' }}>武器</span>
+                  <div className="kv-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>武器</span>
                     <span>{user.weapon_name || 'なし'}</span>
-                    <button onClick={() => handleOpenInventory('weapon_id')} style={{ background: '#444', color: '#fff', border: 'none', padding: '2px 8px', fontSize: '0.7rem', cursor: 'pointer' }}>武器搭載</button>
+                    <button onClick={() => handleOpenInventory('weapon_id')} className="mini-btn">武器搭載</button>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #333', paddingBottom: '4px' }}>
-                    <span style={{ color: '#888' }}>装備1</span>
+                  <div className="kv-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>装備1</span>
                     <span>{user.item1_name || 'なし'}</span>
-                    <button onClick={() => handleOpenInventory('item1_id')} style={{ background: '#444', color: '#fff', border: 'none', padding: '2px 8px', fontSize: '0.7rem', cursor: 'pointer' }}>装備1搭載</button>
+                    <button onClick={() => handleOpenInventory('item1_id')} className="mini-btn">装備1搭載</button>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #333', paddingBottom: '4px' }}>
-                    <span style={{ color: '#888' }}>装備2</span>
+                  <div className="kv-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>装備2</span>
                     <span>{user.item2_name || 'なし'}</span>
-                    <button onClick={() => handleOpenInventory('item2_id')} style={{ background: '#444', color: '#fff', border: 'none', padding: '2px 8px', fontSize: '0.7rem', cursor: 'pointer' }}>装備2搭載</button>
+                    <button onClick={() => handleOpenInventory('item2_id')} className="mini-btn">装備2搭載</button>
                   </div>
                   
                   {/* Grid Stats */}
@@ -522,8 +514,8 @@ export const MyPage: React.FC = () => {
                   </div>
 
                   {/* Terrain */}
-                  <div style={{ marginTop: '10px', background: 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '4px', fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#888' }}>機体の適性</span>
+                  <div className="chip-row" style={{ marginTop: '10px', background: 'var(--panel-inset)', padding: '6px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>機体の適性</span>
                     <span>【地上】{user.terrain_ground ?? '-'}</span>
                     <span>【水中】{user.terrain_water ?? '-'}</span>
                     <span>【宇宙】{user.terrain_space ?? '-'}</span>
@@ -595,15 +587,11 @@ export const MyPage: React.FC = () => {
                     {Object.entries(user.traits || {}).map(([t, lv], i) => <span key={i} style={{ background: 'rgba(155,89,182,0.2)', color: '#d6bcfa', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem' }}>{t}{lv > 1 ? `LV${lv}` : ''}</span>)}
                   </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', background: 'rgba(0,0,0,0.3)', padding: '8px', borderRadius: '4px' }}>
-                  <div style={{ display: 'flex', gap: '20px' }}>
-                    <span style={{ color: '#888', fontSize: '0.9rem' }}>戦闘</span>
-                    <span>{winBattles}勝{loseBattles}敗</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '20px' }}>
-                    <span style={{ color: '#888', fontSize: '0.9rem' }}>勝率</span>
-                    <span>{winRate}%</span>
-                  </div>
+                <div className="kv-row" style={{ marginTop: '10px', background: 'var(--panel-inset)', padding: '8px', borderRadius: '4px' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>戦闘</span>
+                  <span>{winBattles}勝{loseBattles}敗</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginLeft: 'auto' }}>勝率</span>
+                  <span>{winRate}%</span>
                 </div>
               </div>
 
@@ -612,8 +600,8 @@ export const MyPage: React.FC = () => {
         </div>
 
         {/* BOTTOM SECTIONS */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-          
+        <div className="grid-2" style={{ marginBottom: '20px' }}>
+
           {/* TEAM MEMBERS（実データ: /api/squad） */}
           <div className="stats-allocation" style={{ margin: 0 }}>
             <div style={{ borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -653,64 +641,54 @@ export const MyPage: React.FC = () => {
           </div>
         </div>
 
-        {/* BOTTOM NAVIGATION GRID */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(13, 1fr)', gap: '10px' }}>
-          <button onClick={() => navigate('/training')} className="submit-btn" style={{ background: '#2b6cb0', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>フラナガン機関</button>
-          <button onClick={() => navigate('/anaheim')} className="submit-btn" style={{ background: '#2b6cb0', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>アナハイム</button>
-          <button onClick={() => navigate('/hangar')} className="submit-btn" style={{ background: '#2b6cb0', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>格納庫</button>
-          <button onClick={() => navigate('/database')} className="submit-btn" style={{ background: '#4c51bf', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>機体データベース</button>
-          <button onClick={() => navigate('/ranking')} className="submit-btn" style={{ background: '#2b6cb0', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>ランキング</button>
-          <button onClick={() => navigate('/tournament')} className="submit-btn" style={{ background: '#c53030', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>トーナメント</button>
-          <button onClick={() => navigate('/faction')} className="submit-btn" style={{ background: '#48bb78', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>勢力一覧</button>
-          <button onClick={() => navigate('/tactics')} className="submit-btn" style={{ background: '#2b6cb0', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>戦術設定</button>
-          <button onClick={() => navigate('/log')} className="submit-btn" style={{ background: '#2b6cb0', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>防衛履歴</button>
-          <button onClick={() => navigate('/team')} className="submit-btn" style={{ background: '#2b6cb0', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>チーム編成</button>
-          <button onClick={() => navigate('/chat')} className="submit-btn" style={{ background: '#d69e2e', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>チャット</button>
-          <button onClick={() => navigate('/bbs')} className="submit-btn" style={{ background: '#dd6b20', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>掲示板</button>
-          <button onClick={() => navigate('/trade')} className="submit-btn" style={{ background: '#b7791f', padding: '10px 5px', fontSize: '0.8rem', margin: 0 }}>中古MS売り場</button>
-        </div>
+        {/* かつてここに repeat(13, 1fr) のボタングリッドがあり、それが実質のグローバルナビだった。
+         * 13等分でラベルが「フラ/ナガ/ン機/関」に割れ、他ページからは戻れず、現在地も分からなかった。
+         * 行き先は AppLayout のサイドバー（モバイルはドロワー）に集約したのでここには置かない。 */}
       </div>
 
       {/* 機体解説モーダル */}
-      {showUnitDesc && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowUnitDesc(false)}>
-          <div className="glass-panel" style={{ width: '90%', maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
-            <h3 className="cyber-title" style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#4bc8ff' }}>{user.unit_name}</h3>
-            {user.unit_image && (
-              <UnitImage file={user.unit_image} alt={user.unit_name} style={{ maxWidth: '160px', display: 'block', margin: '0 auto 1rem' }} />
-            )}
-            <div style={{ color: '#ddd', lineHeight: 1.8, fontSize: '0.95rem', fontStyle: 'italic' }}>
-              {(user as any).unit_description || 'この機体の解説データはありません。'}
-            </div>
-            <button onClick={() => setShowUnitDesc(false)} className="text-btn" style={{ width: '100%', marginTop: '1.2rem', padding: '0.6rem', border: '1px solid #aaa', borderRadius: '4px' }}>閉じる</button>
-          </div>
+      <Modal
+        open={showUnitDesc}
+        onClose={() => setShowUnitDesc(false)}
+        title={user.unit_name}
+        actions={<button className="text-btn" onClick={() => setShowUnitDesc(false)}>閉じる</button>}
+      >
+        {user.unit_image && (
+          <UnitImage file={user.unit_image} alt={user.unit_name} style={{ maxWidth: '160px', display: 'block', margin: '0 auto 1rem' }} />
+        )}
+        <div style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+          {(user as any).unit_description || 'この機体の解説データはありません。'}
         </div>
-      )}
+      </Modal>
 
       {/* Inventory Modal */}
-      {showInventory && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="glass-panel" style={{ width: '90%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }}>
-            <h3 className="cyber-title" style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#4bc8ff' }}>INVENTORY - アイテム選択</h3>
-            
-            <button 
-              className="submit-btn" 
-              onClick={() => handleEquip(null)}
-              style={{ width: '100%', marginBottom: '1rem', background: 'rgba(255, 107, 107, 0.2)', color: '#ff6b6b', borderColor: '#ff6b6b' }}
-            >
-              現在の装備を外す
-            </button>
+      <Modal
+        open={showInventory}
+        onClose={() => setShowInventory(false)}
+        title="装備を選ぶ"
+        size="md"
+        actions={<button className="text-btn" onClick={() => setShowInventory(false)}>閉じる</button>}
+      >
+        <button
+          className="submit-btn"
+          onClick={() => handleEquip(null)}
+          style={{ width: '100%', marginBottom: '1rem', marginTop: 0, background: 'transparent', border: '1px solid var(--danger)', color: 'var(--danger)' }}
+        >
+          現在の装備を外す
+        </button>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', color: '#fff', fontSize: '0.9rem' }}>
-              <thead>
-                <tr style={{ background: 'rgba(255,255,255,0.1)', textAlign: 'left' }}>
-                  <th style={{ padding: '0.8rem' }}>アイテム名</th>
-                  <th style={{ padding: '0.8rem' }}>種別</th>
-                  <th style={{ padding: '0.8rem', textAlign: 'center' }}>重量</th>
-                  <th style={{ padding: '0.8rem', textAlign: 'center' }}>操作</th>
-                </tr>
-              </thead>
-              <tbody>
+        {/* 表は狭い画面で縮まないので、単体で横スクロールさせる */}
+        <div className="scroll-x">
+          <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+            <thead>
+              <tr style={{ background: 'rgba(255,255,255,0.06)', textAlign: 'left' }}>
+                <th style={{ padding: '0.8rem' }}>アイテム名</th>
+                <th style={{ padding: '0.8rem' }}>種別</th>
+                <th style={{ padding: '0.8rem', textAlign: 'center' }}>重量</th>
+                <th style={{ padding: '0.8rem', textAlign: 'center' }}>操作</th>
+              </tr>
+            </thead>
+            <tbody>
                 {inventory.map(item => (
                   <tr key={item.inventory_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                     <td style={{ padding: '0.8rem' }}>
@@ -752,25 +730,18 @@ export const MyPage: React.FC = () => {
                     </td>
                   </tr>
                 ))}
-                {inventory.length === 0 && (
-                  <tr>
-                    <td colSpan={3} style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>
-                      インベントリにアイテムがありません。
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            <button 
-              onClick={() => setShowInventory(false)}
-              className="text-btn"
-              style={{ width: '100%', marginTop: '1rem', padding: '0.8rem', background: 'transparent', border: '1px solid #aaa', color: '#aaa', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              閉じる
-            </button>
-          </div>
+              {inventory.length === 0 && (
+                <tr>
+                  {/* 列は4つ。以前は colSpan=3 で、空メッセージが「操作」列の下に潜り込んでいた */}
+                  <td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    インベントリにアイテムがありません。
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </Modal>
     </div>
   );
 };

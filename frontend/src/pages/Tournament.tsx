@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Register.css'; 
+import './Register.css';
+import { showChoice } from '../components/prompt'; 
 
 export const Tournament: React.FC = () => {
   const getRemainingTimeFormat = (createdAt: string) => {
@@ -84,27 +85,27 @@ export const Tournament: React.FC = () => {
       return;
     }
 
-    // window.confirmの代わりにカスタムのUIを作るのがベストだが、ここではシンプルにするために一応外しておく。
-    // （※グローバルルールに従い、alert/confirm は使わないよう修正）
-    // とりあえず無条件でエントリーするか、カスタム確認が必要。今回はダイレクトにエントリーする仕様にする。
-    
-    setLoading(true);
-    setError('');
-    setMessage('');
-
-    // P33: 団体総力戦は陣営(1/2)を選んでエントリー
+    // P33: 団体総力戦は陣営(1/2)を選んでエントリー。
+    // 以前は window.prompt で「1 または 2」を手入力させ、範囲外なら弾いていた。
+    // 二択なので、そのまま押せるようにする（入力ミスという概念自体が無くなる）。
     const target = tournaments.find(t => t.id === tournamentId);
     let side: number | undefined;
     if (target && Number(target.format) === 3) {
-      const input = window.prompt('団体総力戦です。所属陣営を選択してください（1 または 2）', '1');
-      if (input === null) { setLoading(false); return; }
-      side = Number(input);
-      if (side !== 1 && side !== 2) {
-        setError('陣営は 1 か 2 を指定してください');
-        setLoading(false);
-        return;
-      }
+      const picked = await showChoice(
+        'この大会は団体総力戦です。どちらの陣営で参加しますか？',
+        [
+          { value: '1', label: '第1陣営' },
+          { value: '2', label: '第2陣営' },
+        ],
+        { title: '所属陣営を選ぶ' }
+      );
+      if (picked === null) return;
+      side = Number(picked);
     }
+
+    setLoading(true);
+    setError('');
+    setMessage('');
 
     try {
       const response = await fetch(`/api/tournaments/${tournamentId}/entry`, {

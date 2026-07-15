@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Modal } from '../components/Modal';
 import './Register.css'; 
 import { UnitImage } from '../components/UnitImage';
 
@@ -305,24 +306,28 @@ export const Hangar: React.FC = () => {
         </div>
       </div>
 
-      {discardConfirmModal.isOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
-        }}>
-          <div className="glass-panel" style={{ maxWidth: '400px', width: '90%', textAlign: 'center' }}>
-            <h2 className="cyber-title" style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#ff4b4b' }}>DISCARD CONFIRMATION</h2>
-            <p style={{ color: '#fff', marginBottom: '1rem' }}>
-              本当に {discardConfirmModal.unitName} を廃棄しますか？<br />
-              <span style={{ color: '#ff4b4b', fontSize: '0.9rem' }}>機体は完全に失われます</span>
-            </p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <button className="submit-btn" onClick={handleDiscard} style={{ flex: 1, background: 'rgba(255, 75, 75, 0.2)', borderColor: '#ff4b4b', color: '#ff4b4b' }}>YES</button>
-              <button className="submit-btn" onClick={() => setDiscardConfirmModal({isOpen: false, hangarId: null, unitName: ''})} style={{ flex: 1, background: 'transparent', border: '1px solid #aaa', color: '#aaa' }}>NO</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 機体の廃棄は取り消せないので、オーバーレイクリックや ESC では閉じない */}
+      <Modal
+        open={discardConfirmModal.isOpen}
+        onClose={() => setDiscardConfirmModal({ isOpen: false, hangarId: null, unitName: '' })}
+        title="機体を廃棄する"
+        dismissable={false}
+        actions={
+          <>
+            <button className="text-btn" onClick={() => setDiscardConfirmModal({ isOpen: false, hangarId: null, unitName: '' })}>
+              キャンセル
+            </button>
+            <button className="submit-btn" onClick={handleDiscard} style={{ background: 'var(--danger)' }}>
+              廃棄する
+            </button>
+          </>
+        }
+      >
+        <p style={{ color: 'var(--text-primary)' }}>
+          本当に {discardConfirmModal.unitName} を廃棄しますか？<br />
+          <span style={{ color: 'var(--danger)', fontSize: '0.9rem' }}>機体は完全に失われます。取り消せません。</span>
+        </p>
+      </Modal>
     </div>
   );
 };

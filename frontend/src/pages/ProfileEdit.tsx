@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Modal } from '../components/Modal';
 import './Register.css'; // Reuse cyber theme CSS
 
 interface Icon {
@@ -13,8 +14,6 @@ export const ProfileEdit: React.FC = () => {
   const [sysMsg, setSysMsg] = useState('');
 
   const [formData, setFormData] = useState({
-    current_password: '',
-    new_password: '',
     handle_name: '',
     chara_name: '',
     public_comment: '',
@@ -65,8 +64,6 @@ export const ProfileEdit: React.FC = () => {
           try { bc = JSON.parse(bc); } catch (e) { bc = {}; }
         }
         setFormData({
-          current_password: '',
-          new_password: '',
           handle_name: u.handle_name || '',
           chara_name: u.chara_name || '',
           public_comment: u.public_comment || '',
@@ -187,16 +184,10 @@ export const ProfileEdit: React.FC = () => {
           </div>
           
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {/* パスワードと Google 連携は「アカウント設定」(/account) へ移した。
+              * ここはゲーム側の見た目・振る舞いの設定に絞る。 */}
             <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center', gap: '10px' }}>
-              <label style={{ color: '#4facfe', fontSize: '0.9rem' }}>パスワード</label>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <input type="password" placeholder="現在のパスワード" className="cyber-input" style={{ flex: 1 }} value={formData.current_password} onChange={e => setFormData({ ...formData, current_password: e.target.value })} />
-                <input type="password" placeholder="新しいパスワード" className="cyber-input" style={{ flex: 1 }} value={formData.new_password} onChange={e => setFormData({ ...formData, new_password: e.target.value })} />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center', gap: '10px' }}>
-              <label style={{ color: '#4facfe', fontSize: '0.9rem' }}>ハンドル</label>
+              <label style={{ color: 'var(--accent-cyan)', fontSize: '0.9rem' }}>ハンドル</label>
               <input type="text" className="cyber-input" value={formData.handle_name} onChange={e => setFormData({ ...formData, handle_name: e.target.value })} />
             </div>
 
@@ -206,7 +197,7 @@ export const ProfileEdit: React.FC = () => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center', gap: '10px' }}>
-              <label style={{ color: '#4facfe', fontSize: '0.9rem' }}>ランカーの呼称</label>
+              <label style={{ color: 'var(--accent-cyan)', fontSize: '0.9rem' }}>ランカーの呼称</label>
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <input type="text" className="cyber-input" style={{ flex: 1 }} value={formData.katagaki} onChange={e => setFormData({ ...formData, katagaki: e.target.value })} />
                 <span style={{ fontSize: '0.8rem', color: '#ecc94b' }}>※変更時 名声1消費 (現在: {userFame})</span>
@@ -263,38 +254,51 @@ export const ProfileEdit: React.FC = () => {
 
       </div>
 
-      {showIconModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowIconModal(false)}>
-          <div className="glass-panel" style={{ width: '90%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-            <h3 className="cyber-title" style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#4bc8ff' }}>顔グラフィック一覧</h3>
-            <div style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '1rem' }}>任意の画像をクリックすると、その顔がキャラクターの顔になります。<br/>他のプレイヤーによってすでに使われている画像は選択できません。</div>
-            
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-              {icons.map(icon => (
-                <div 
-                  key={icon.filename} 
-                  style={{ 
-                    width: '80px', height: '80px', border: formData.icon === icon.filename ? '2px solid #4facfe' : '1px solid #444', 
-                    opacity: icon.is_used && formData.icon !== icon.filename ? 0.3 : 1,
-                    cursor: icon.is_used && formData.icon !== icon.filename ? 'not-allowed' : 'pointer',
-                    position: 'relative'
-                  }}
-                  onClick={() => {
-                    if (!icon.is_used || formData.icon === icon.filename) {
-                      setFormData({ ...formData, icon: icon.filename });
-                      setShowIconModal(false);
-                    }
-                  }}
-                >
-                  <img src={`/images/chara/${icon.filename}`} alt="face" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => (e.currentTarget.src = '/images/no_image.png')} />
-                  {icon.is_used && formData.icon !== icon.filename && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'red', fontWeight: 'bold', fontSize: '0.8rem', textShadow: '1px 1px 0 #000', whiteSpace: 'nowrap' }}>使用中</div>}
-                </div>
-              ))}
-            </div>
-            <button onClick={() => setShowIconModal(false)} className="text-btn" style={{ width: '100%', marginTop: '1.2rem', padding: '0.6rem', border: '1px solid #aaa', borderRadius: '4px' }}>閉じる</button>
-          </div>
+      <Modal
+        open={showIconModal}
+        onClose={() => setShowIconModal(false)}
+        title="顔グラフィック一覧"
+        size="md"
+        actions={<button className="text-btn" onClick={() => setShowIconModal(false)}>閉じる</button>}
+      >
+        <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+          任意の画像をクリックすると、その顔がキャラクターの顔になります。<br />
+          他のプレイヤーによってすでに使われている画像は選択できません。
         </div>
-      )}
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          {icons.map(icon => {
+            const locked = icon.is_used && formData.icon !== icon.filename;
+            return (
+              <button
+                key={icon.filename}
+                type="button"
+                disabled={locked}
+                aria-pressed={formData.icon === icon.filename}
+                style={{
+                  width: '80px', height: '80px', padding: 0,
+                  border: formData.icon === icon.filename ? '2px solid var(--accent-color)' : '1px solid var(--border-color)',
+                  opacity: locked ? 0.3 : 1,
+                  cursor: locked ? 'not-allowed' : 'pointer',
+                  position: 'relative',
+                  background: 'transparent',
+                }}
+                onClick={() => {
+                  setFormData({ ...formData, icon: icon.filename });
+                  setShowIconModal(false);
+                }}
+              >
+                <img src={`/images/chara/${icon.filename}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => (e.currentTarget.src = '/images/no_image.png')} />
+                {locked && (
+                  <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'var(--danger)', fontWeight: 'bold', fontSize: '0.8rem', textShadow: '1px 1px 0 #000', whiteSpace: 'nowrap' }}>
+                    使用中
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </Modal>
 
     </div>
   );

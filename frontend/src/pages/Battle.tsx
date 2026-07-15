@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BattleAnimation, type BattleEvent, type BattleMeta } from '../components/BattleAnimation';
 import { UnitImage } from '../components/UnitImage';
+import { Modal } from '../components/Modal';
 
 const TerrainMap: Record<number, string> = { 1: '地上', 2: '水中', 3: '宇宙', 4: '空中', 5: '仮想空間' };
 
@@ -414,79 +415,95 @@ const Battle: React.FC = () => {
         />
       )}
 
-      {messageModal.isOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div className="glass-panel" style={{ width: '400px', textAlign: 'center' }}>
-            <h3 style={{ color: 'var(--accent-color)', marginBottom: '1rem' }}>SYSTEM MESSAGE</h3>
-            <p style={{ marginBottom: '2rem' }}>{messageModal.text}</p>
-            <button className="submit-btn" onClick={() => setMessageModal({ isOpen: false, text: '' })} style={{ width: '100%', margin: 0 }}>
-              OK
-            </button>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={messageModal.isOpen}
+        onClose={() => setMessageModal({ isOpen: false, text: '' })}
+        title="システムメッセージ"
+        actions={
+          <button className="submit-btn" onClick={() => setMessageModal({ isOpen: false, text: '' })}>OK</button>
+        }
+      >
+        <p style={{ color: 'var(--text-primary)' }}>{messageModal.text}</p>
+      </Modal>
 
-      {moveTerrainModal.isOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="glass-panel" style={{ padding: '2rem', maxWidth: '400px', width: '100%' }}>
-            <h3 className="cyber-title" style={{ fontSize: '1.2rem', marginBottom: '1rem', textAlign: 'center' }}>移動先の戦場を選択</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem' }}>
-              <button className="submit-btn" onClick={() => handleMoveTerrain(1)} disabled={isSubmitting} style={{ margin: 0 }}>地上</button>
-              <button className="submit-btn" onClick={() => handleMoveTerrain(2)} disabled={isSubmitting} style={{ margin: 0 }}>水中</button>
-              <button className="submit-btn" onClick={() => handleMoveTerrain(3)} disabled={isSubmitting} style={{ margin: 0 }}>宇宙</button>
-              <button className="submit-btn" onClick={() => handleMoveTerrain(4)} disabled={isSubmitting} style={{ margin: 0 }}>空中</button>
-              <button className="submit-btn" onClick={() => handleMoveTerrain(5)} disabled={isSubmitting} style={{ margin: 0 }}>仮想空間（地形補正なし）</button>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <button className="text-btn" onClick={() => setMoveTerrainModal({isOpen: false, type: ''})} disabled={isSubmitting}>キャンセル</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showLogsModal.isOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div className="glass-panel" style={{ width: '90%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }}>
-            <h3 style={{ color: 'var(--accent-color)', marginBottom: '1rem' }}>{showLogsModal.title} - 挑戦履歴(直近5件)</h3>
-            {showLogsModal.logs.length === 0 ? (
-              <p>記録はありません。</p>
-            ) : (
-              showLogsModal.logs.map((log: any, idx: number) => (
-                <div key={idx} style={{ marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '1rem' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#aaa', marginBottom: '0.5rem' }}>{new Date(log.created_at).toLocaleString('ja-JP')}</div>
-                  <div style={{ fontWeight: 'bold', color: log.is_attacker_win ? '#ff4b4b' : '#4facfe', marginBottom: '0.5rem' }}>
-                    {log.is_attacker_win ? '防衛失敗（敗北して王座陥落）' : '防衛成功（勝利）'}
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#ddd', whiteSpace: 'pre-wrap', maxHeight: '200px', overflowY: 'auto', background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '4px' }}>
-                    {log.log_text}
-                  </div>
-                  {log.events && log.meta && (
-                    <button 
-                      className="submit-btn" 
-                      onClick={() => {
-                        setShowLogsModal({ isOpen: false, title: '', logs: [] });
-                        setBattleData({ events: log.events, meta: log.meta });
-                      }}
-                      style={{ marginTop: '0.5rem', width: '100%', background: 'rgba(0, 255, 204, 0.2)', border: '1px solid var(--accent-color)' }}
-                    >
-                      アニメーションでリプレイを見る
-                    </button>
-                  )}
-                </div>
-              ))
-            )}
-            <button className="submit-btn" onClick={() => setShowLogsModal({ isOpen: false, title: '', logs: [] })} style={{ width: '100%', margin: '1rem 0 0 0' }}>
-              閉じる
+      <Modal
+        open={moveTerrainModal.isOpen}
+        onClose={() => setMoveTerrainModal({ isOpen: false, type: '' })}
+        title="移動先の戦場を選択"
+        actions={
+          <button className="text-btn" onClick={() => setMoveTerrainModal({ isOpen: false, type: '' })} disabled={isSubmitting}>
+            キャンセル
+          </button>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {([
+            [1, '地上'], [2, '水中'], [3, '宇宙'], [4, '空中'],
+            [5, '仮想空間（地形補正なし）'],
+          ] as const).map(([id, label]) => (
+            <button key={id} className="choice-btn" onClick={() => handleMoveTerrain(id)} disabled={isSubmitting}>
+              <b>{label}</b>
             </button>
-          </div>
+          ))}
         </div>
-      )}
+      </Modal>
+
+      <Modal
+        open={showLogsModal.isOpen}
+        onClose={() => setShowLogsModal({ isOpen: false, title: '', logs: [] })}
+        title={`${showLogsModal.title} - 挑戦履歴(直近5件)`}
+        size="md"
+        actions={
+          <button className="text-btn" onClick={() => setShowLogsModal({ isOpen: false, title: '', logs: [] })}>閉じる</button>
+        }
+      >
+        {showLogsModal.logs.length === 0 ? (
+          <p>記録はありません。</p>
+        ) : (
+          showLogsModal.logs.map((log: any, idx: number) => (
+            <div key={idx} style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1rem' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>{new Date(log.created_at).toLocaleString('ja-JP')}</div>
+              <div style={{ fontWeight: 'bold', color: log.is_attacker_win ? 'var(--danger)' : 'var(--accent-cyan)', marginBottom: '0.5rem' }}>
+                {log.is_attacker_win ? '防衛失敗（敗北して王座陥落）' : '防衛成功（勝利）'}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', maxHeight: '200px', overflowY: 'auto', background: 'var(--panel-inset)', padding: '0.5rem', borderRadius: '4px' }}>
+                {log.log_text}
+              </div>
+              {log.events && log.meta && (
+                <button
+                  className="submit-btn"
+                  onClick={() => {
+                    setShowLogsModal({ isOpen: false, title: '', logs: [] });
+                    setBattleData({ events: log.events, meta: log.meta });
+                  }}
+                  style={{ marginTop: '0.5rem', width: '100%' }}
+                >
+                  アニメーションでリプレイを見る
+                </button>
+              )}
+            </div>
+          ))
+        )}
+      </Modal>
 
       {createDefenseModal.isOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div className="glass-panel" style={{ width: '400px' }}>
-            <h3 style={{ color: 'var(--accent-color)', marginBottom: '1rem', textAlign: 'center' }}>個別戦闘の発動</h3>
-            <form onSubmit={handleCreateDefenseSubmit}>
+        <Modal
+          open={createDefenseModal.isOpen}
+          onClose={() => { setCreateDefenseModal({ isOpen: false }); setDefenseTitle(''); }}
+          title="個別戦闘の発動"
+          actions={
+            <>
+              <button type="button" className="text-btn" onClick={() => { setCreateDefenseModal({ isOpen: false }); setDefenseTitle(''); }}>
+                キャンセル
+              </button>
+              {/* フッターは <form> の外にあるので、form 属性で紐付けて submit させる */}
+              <button type="submit" form="create-defense-form" className="submit-btn" disabled={isSubmitting}>
+                発動する
+              </button>
+            </>
+          }
+        >
+            <form id="create-defense-form" onSubmit={handleCreateDefenseSubmit}>
               <div className="form-group">
                 <label>作戦名</label>
                 <input
@@ -542,17 +559,8 @@ const Battle: React.FC = () => {
                   <input type="number" className="cyber-input" value={defenseHpValue} onChange={(e) => setDefenseHpValue(e.target.value)} disabled={defenseHpCond === 'free'} placeholder="耐久値" style={{ flex: 1 }} />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-                <button type="submit" className="submit-btn" disabled={isSubmitting} style={{ flex: 1, margin: 0 }}>
-                  発動する
-                </button>
-                <button type="button" className="submit-btn" onClick={() => { setCreateDefenseModal({ isOpen: false }); setDefenseTitle(''); }} style={{ flex: 1, margin: 0, background: 'transparent', border: '1px solid #aaa', color: '#aaa' }}>
-                  キャンセル
-                </button>
-              </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
 
     </div>

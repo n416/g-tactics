@@ -1,0 +1,129 @@
+/* ============================================================
+ * アカウント設定
+ * ============================================================ */
+
+.account-section-title {
+  font-size: 1rem;
+  margin: var(--space-6) 0 var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.account-section-title.danger { color: var(--danger); }
+
+.account-section-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: var(--space-4);
+}
+
+.account-section-note b { color: var(--text-secondary); }
+
+/* ---------- ログイン方法の一覧 ----------
+ * 状態を並べて見せるのが目的。以前は「解除」ボタンを disabled にして
+ * 小さな注記を添えるだけで、なぜ押せないのかが伝わらなかった。
+ * Google だけで登録した人は、自分がパスワードを持っていないことすら知らない。 */
+.login-methods {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+}
+
+.login-methods li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--panel-inset);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--border-color);
+  border-radius: var(--radius);
+  flex-wrap: wrap;
+}
+
+/* 有効な手段は左端の色で示す */
+.login-methods li.on { border-left-color: var(--success); }
+
+.lm-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex: none;
+}
+
+.lm-icon svg { width: 20px; height: 20px; }
+
+.lm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.lm-body b { font-size: 0.92rem; color: var(--text-primary); }
+
+.lm-state { font-size: 0.78rem; }
+.lm-state.on { color: var(--success); }
+.lm-state.off { color: var(--text-muted); }
+
+/* 「これが唯一のログイン方法です」。失うと入れなくなることを、その行の中で言う */
+.lm-warn {
+  font-size: 0.72rem;
+  color: var(--warning);
+  margin-top: 2px;
+}
+
+.lm-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.lm-action {
+  width: auto;
+  margin: 0;
+  padding: var(--space-2) var(--space-5);
+  font-size: 0.85rem;
+}
+
+.lm-danger { color: var(--danger); }
+
+/* ---------- 注意書き ---------- */
+.account-alert {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: rgba(236, 201, 75, 0.08);
+  border: 1px solid rgba(236, 201, 75, 0.3);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.account-alert b { color: var(--warning); font-size: 0.88rem; }
+.account-alert span { color: var(--text-secondary); font-size: 0.8rem; line-height: 1.6; }
+
+.account-delete {
+  width: auto;
+  margin: 0;
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+.account-delete:hover:not(:disabled) { background: var(--danger); color: #fff; }
+
+@media (max-width: 560px) {
+  .login-methods li { gap: var(--space-3); }
+  .lm-actions, .lm-action { width: 100%; }
+  .lm-actions { justify-content: space-between; }
+}

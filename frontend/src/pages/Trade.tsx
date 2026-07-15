@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { showConfirm } from '../components/confirm';
+import { showPrompt } from '../components/prompt';
 import './Register.css';
 
 interface Listing {
@@ -195,8 +196,19 @@ const Trade: React.FC = () => {
   // P34: 入札
   const handleBid = async (l: Listing) => {
     const minBid = Math.max(l.price, (l.current_bid || 0) + 1);
-    const input = window.prompt(`入札額を入力してください（${minBid}G 以上）`, String(minBid));
-    if (!input) return;
+    // 下限は showPrompt 側で弾くので、ここまで来た値は minBid 以上であることが保証される。
+    // 以前は window.prompt の戻り値を `if (!input)` で見ており、"0" が falsy に落ちて
+    // キャンセルと区別できていなかった（null との判定に直してある）。
+    // 出品は機体とアイテムの両方があるので、一覧の表示と同じ出し分けにする
+    const targetName = (l.listing_type === 'unit' ? l.unit_name : l.item_name) ?? '出品物';
+    const input = await showPrompt(`${targetName} に入札します。`, {
+      title: '入札',
+      type: 'number',
+      defaultValue: String(minBid),
+      min: minBid,
+      confirmLabel: '入札する',
+    });
+    if (input === null) return;
     const amount = parseInt(input, 10);
     if (isNaN(amount)) { setError('数値を入力してください。'); return; }
     try {

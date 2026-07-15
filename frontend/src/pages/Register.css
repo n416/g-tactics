@@ -1,9 +1,32 @@
+/* ============================================================
+ * 元は登録画面専用の CSS だったが、現在は全ページが import しており
+ * 実質のグローバルスタイルシートになっている（MyPage.tsx の
+ * "Reusing cyber theme CSS" 参照）。ページ共通の器はここが持つ。
+ * ============================================================ */
+
+/* ページの器。
+ *
+ * 旧実装は min-height:100vh + 上下中央寄せで、「画面中央に1枚パネル」を作っていた。
+ * AppLayout がヘッダー・ナビ・スクロールを持つようになったので、
+ * ここは横方向の中央寄せと余白だけを担当する。
+ * 上下中央寄せを残すと、ヘッダーの下でページが上下に泳いでしまう。 */
 .register-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-6) var(--space-4) var(--space-8);
+  color: var(--text-primary);
+}
+
+/* ログイン前（Home / Register）だけは、外枠が無いので画面中央に置く */
+.auth-container {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  padding: var(--space-8) var(--space-4);
   background: var(--bg-color);
   color: var(--text-primary);
 }
@@ -12,10 +35,163 @@
   background: var(--panel-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
-  padding: 3rem;
+  padding: var(--space-8);
   width: 100%;
   max-width: 600px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* 狭い画面ではパネルの余白が内容を圧迫するので詰める */
+@media (max-width: 600px) {
+  .register-container {
+    padding: var(--space-4) var(--space-2) var(--space-6);
+  }
+  .glass-panel {
+    padding: var(--space-4);
+  }
+}
+
+/* ---------- Google 連携 ---------- */
+
+/* Google のブランドガイドラインに沿った白ボタン。
+ * 見慣れた形から外すと押されないので、ここだけはアプリのトンマナに寄せない。 */
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: #fff;
+  color: #1f1f1f;
+  border: 1px solid #dadce0;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.google-btn:hover {
+  background: #f7f8f8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.google-btn svg { width: 18px; height: 18px; flex: none; }
+
+/* マイページの連携バナー。パスワード再設定手段が無い以上、ここが唯一の復旧導線になる */
+.link-google-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  background: var(--panel-inset);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.link-google-banner > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.link-google-banner b { font-size: 0.9rem; color: var(--text-primary); }
+.link-google-banner span { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
+
+/* プロフィール変更の連携行 */
+.google-link-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.link-status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.link-status.linked { color: var(--success); font-weight: 600; }
+
+.link-note {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  flex-basis: 100%;
+}
+
+.google-link-row .google-btn { padding: 0.45rem 0.9rem; font-size: 0.85rem; }
+
+/* 押せない理由が伝わるように、無効時も薄くするだけで隠さない */
+.google-link-row .text-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Google 認証済みで登録画面へ来た人への表示 */
+.google-linked-note {
+  background: rgba(75, 255, 125, 0.08);
+  border: 1px solid rgba(75, 255, 125, 0.25);
+  color: var(--success);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-5);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* 「または」の区切り線 */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+/* ---------- ログイン画面（Home）の2カラム ---------- */
+.home-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+}
+
+/* 右カラム（HOME情勢）。折り返したときは左罫線が宙に浮くので上罫線に切り替える */
+.home-aside {
+  flex: 1;
+  min-width: 250px;
+  text-align: left;
+  border-left: 1px solid var(--border-subtle);
+  padding-left: var(--space-8);
+}
+
+@media (max-width: 640px) {
+  .home-cols { gap: var(--space-5); }
+  .home-aside {
+    border-left: none;
+    border-top: 1px solid var(--border-subtle);
+    padding-left: 0;
+    padding-top: var(--space-5);
+  }
 }
 
 .cyber-title {
@@ -94,6 +270,208 @@
   border-color: var(--accent-color);
   box-shadow: 0 0 0 1px var(--accent-color);
 }
+
+/* ============================================================
+ * 登録画面（1画面構成）
+ *   左: アカウント/キャラクター名  右: 初期機体ルーレット
+ *   下: ステータス（プリセット + 折りたたみ詳細）
+ * ============================================================ */
+.reg-cols {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .reg-cols { grid-template-columns: 1fr; gap: var(--space-6); }
+}
+
+.reg-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* 各項目が何なのかを添える。ハンドルネームとキャラクター名の違いが
+ * 分からず手が止まるのを防ぐ。 */
+.field-note {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ---------- ルーレット ---------- */
+.reg-roulette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--panel-inset);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+}
+
+.roulette-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.roulette-left {
+  font-size: 0.72rem;
+  color: var(--warning);
+  font-weight: 400;
+}
+
+.roulette-frame {
+  height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.roulette-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  /* 素材が往年のCGIゲームの小さい GIF なので、補間せず拡大したほうが潰れない */
+  image-rendering: pixelated;
+  transform: scale(1.6);
+}
+
+.roulette-frame.spinning .roulette-img {
+  /* 回転中は「切り替わっている」ことだけ伝われば十分。像は追わせない */
+  filter: blur(1px) brightness(1.15);
+  opacity: 0.85;
+}
+
+.roulette-placeholder {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.roulette-name {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--accent-cyan);
+  min-height: 1.5em;
+}
+
+.roulette-spec {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.roulette-spec b { color: var(--text-primary); font-weight: 700; }
+
+.roulette-desc {
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  font-style: italic;
+  max-height: 5.5em;
+  overflow-y: auto;
+  margin: 0;
+}
+
+.roulette-btn {
+  background: var(--warning);
+  color: #1a1a1a;
+  border: none;
+  font-weight: 700;
+  padding: var(--space-3);
+  font-size: 0.9rem;
+}
+
+.roulette-btn:hover:not(:disabled) { background: #f6d55c; }
+
+.roulette-btn:disabled {
+  background: var(--border-color);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+/* ---------- ステータス ---------- */
+.reg-stats {
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  background: var(--panel-inset);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+}
+
+.reg-stats-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-4);
+}
+
+.reg-stats-head h3 { font-size: 1rem; margin: 0; }
+
+.preset-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+@media (max-width: 620px) {
+  .preset-row { grid-template-columns: 1fr; }
+}
+
+/* プリセット。5本のスライダーを配る決定疲れを、3択に畳むのが狙い。 */
+.preset-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  text-align: left;
+  padding: var(--space-3);
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.preset-btn b { font-size: 0.9rem; color: var(--text-primary); }
+.preset-btn span { font-size: 0.7rem; color: var(--text-muted); line-height: 1.4; font-weight: 400; }
+
+.preset-btn.active {
+  border-color: var(--accent-color);
+  background: rgba(59, 130, 246, 0.12);
+  box-shadow: inset 0 0 0 1px var(--accent-color);
+}
+
+.detail-toggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  padding: var(--space-3) 0 0;
+  cursor: pointer;
+}
+
+.detail-toggle:hover { color: var(--text-primary); background: none; }
+
+.stat-req {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-left: var(--space-2);
+}
+
+/* 手動調整で搭乗条件を割り込んだときだけ出る */
+.stat-req.bad { color: var(--danger); font-weight: 700; }
 
 .stats-allocation {
   margin-top: 1rem;

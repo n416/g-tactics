@@ -1,0 +1,118 @@
+/* ============================================================
+ * 汎用モーダル。アプリ内の全ダイアログはこれ1枚に乗る。
+ *
+ * 以前は各ページが position:fixed のオーバーレイを手書きしていたため、
+ * 色・角丸・余白・閉じ方が画面ごとに違い、ESC も効かなかった。
+ * ============================================================ */
+
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 9000; /* 戦闘アニメ(2000)より上、トースト(9999)より下 */
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  /* 背の高い中身でも画面外に逃げないようにする */
+  overflow-y: auto;
+}
+
+.modal-box {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  /* 画面より高い中身は本文側だけスクロールさせる（ヘッダとボタンは常に見える） */
+  max-height: calc(100vh - var(--space-8));
+  display: flex;
+  flex-direction: column;
+  outline: none;
+}
+
+.modal-box.sm { max-width: 460px; }
+.modal-box.md { max-width: 640px; }
+.modal-box.lg { max-width: 920px; }
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-5) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--accent-cyan);
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  flex: none;
+}
+
+.modal-close:hover { background: var(--border-color); color: var(--text-primary); }
+
+.modal-body {
+  padding: var(--space-5);
+  overflow-y: auto;
+  color: var(--text-primary);
+  line-height: 1.7;
+}
+
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5) var(--space-5);
+  flex-wrap: wrap;
+}
+
+/* モーダル内のボタンは幅いっぱいに広がらせない（.submit-btn が width:100% のため） */
+.modal-foot .submit-btn {
+  width: auto;
+  margin: 0;
+  padding: var(--space-3) var(--space-6);
+}
+
+/* showChoice の選択肢。「1 か 2 を入力してください」を押せるものに変えるためのもの */
+.choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--panel-inset);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+}
+
+.choice-btn:hover {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: var(--accent-color);
+}
+
+.choice-btn b { font-size: 0.95rem; color: var(--text-primary); }
+.choice-btn span { font-size: 0.75rem; color: var(--text-muted); font-weight: 400; }
+
+@media (max-width: 480px) {
+  .modal-scrim { padding: var(--space-2); align-items: flex-end; }
+  .modal-box { max-height: calc(100vh - var(--space-6)); }
+  /* 狭い画面ではボタンを縦積みにして押し間違いを防ぐ */
+  .modal-foot { flex-direction: column-reverse; align-items: stretch; }
+  .modal-foot .submit-btn,
+  .modal-foot .text-btn { width: 100%; }
+}

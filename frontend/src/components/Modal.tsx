@@ -1,28 +1,129 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
+import './Modal.css';
 
 interface ModalProps {
   open: boolean;
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
-  actions?: React.ReactNode;   // フッターのボタン群（省略可）
+  /** フッターのボタン群（省略可） */
+  actions?: React.ReactNode;
+  /** 中身に合わせて選ぶ。sm=確認/入力, md=一覧, lg=表を含むもの */
+  size?: 'sm' | 'md' | 'lg';
+  /** オーバーレイクリックと ESC で閉じられるか。
+   * 取り消せない操作の確認では false にして、明示的な選択を強制する。 */
+  dismissable?: boolean;
 }
 
-// 汎用モーダル。オーバーレイクリックで閉じる。window.alert/confirm の置換や入力フォームに使う。
-export const Modal: React.FC<ModalProps> = ({ open, onClose, title, children, actions }) => {
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * 汎用モーダル。アプリ内のダイアログはすべてこれを通す。
+ *
+ * 各ページが position:fixed のオーバーレイを手書きしていたのをここへ集約したもの。
+ * 手書き版に無かった以下をここで一括して面倒みる:
+ *   - ESC で閉じる
+ *   - 背面のスクロール固定
+ *   - 開いたらフォーカスを中へ移し、閉じたら元の要素へ戻す
+ *   - Tab を内側で循環させる（背後のページへ抜けさせない）
+ *   - role="dialog" / aria-modal
+ */
+export const Modal: React.FC<ModalProps> = ({
+  open,
+  onClose,
+  title,
+  children,
+  actions,
+  size = 'sm',
+  dismissable = true,
+}) => {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
+
+  const requestClose = useCallback(() => {
+    if (dismissable) onClose();
+  }, [dismissable, onClose]);
+
+  // 背面のスクロールを止める
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // 開いた時のフォーカス移動と、閉じた時の復帰
+  useEffect(() => {
+    if (!open) return;
+    restoreFocusRef.current = document.activeElement as HTMLElement | null;
+
+    const first = boxRef.current?.querySelector<HTMLElement>(FOCUSABLE);
+    (first ?? boxRef.current)?.focus();
+
+    return () => {
+      restoreFocusRef.current?.focus?.();
+    };
+  }, [open]);
+
+  // ESC で閉じる / Tab を内側で循環させる
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        requestClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+
+      const items = Array.from(boxRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []);
+      if (items.length === 0) return;
+
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+
+      if (e.shiftKey && (active === first || active === boxRef.current)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open, requestClose]);
+
   if (!open) return null;
+
   return (
-    <div
-      onClick={onClose}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-    >
+    <div className="modal-scrim" onMouseDown={(e) => e.target === e.currentTarget && requestClose()}>
       <div
-        onClick={(e) => e.stopPropagation()}
-        style={{ background: '#1a1a24', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '1.5rem', width: 'min(92vw, 460px)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
+        ref={boxRef}
+        className={`modal-box ${size}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
       >
-        {title && <h3 style={{ margin: '0 0 1rem', color: '#4facfe' }}>{title}</h3>}
-        <div>{children}</div>
-        {actions && <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: '1.25rem' }}>{actions}</div>}
+        {title && (
+          <div className="modal-head">
+            <h3 className="modal-title">{title}</h3>
+            {dismissable && (
+              <button type="button" className="modal-close" onClick={onClose} aria-label="閉じる">
+                ✕
+              </button>
+            )}
+          </div>
+        )}
+        <div className="modal-body">{children}</div>
+        {actions && <div className="modal-foot">{actions}</div>}
       </div>
     </div>
   );

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>シームレス星空タイルプレビュー</title>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #e2e8f0;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      margin-top: 0;
+    }
+    .controls {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+    }
+    .controls label {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: bold;
+    }
+    .preview-section {
+      margin-bottom: 40px;
+    }
+    .tile-container {
+      width: 100%;
+      height: 400px;
+      min-height: 300px;
+      background-image: url('space.svg');
+      background-repeat: repeat;
+      border: 1px solid #334155;
+      position: relative;
+    }
+    .size-256 { background-size: 256px 256px; }
+    .size-128 { background-size: 128px 128px; }
+    .size-64  { background-size: 64px 64px; }
+    
+    /* クラス付け替えによるグリッド（赤線）表示切替 */
+    .show-grid .size-256 {
+      background-image: 
+        linear-gradient(to right, rgba(255,0,0,0.6) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,0,0,0.6) 1px, transparent 1px),
+        url('space.svg');
+      background-size: 256px 256px, 256px 256px, 256px 256px;
+    }
+    .show-grid .size-128 {
+      background-image: 
+        linear-gradient(to right, rgba(255,0,0,0.6) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,0,0,0.6) 1px, transparent 1px),
+        url('space.svg');
+      background-size: 128px 128px, 128px 128px, 128px 128px;
+    }
+    .show-grid .size-64 {
+      background-image: 
+        linear-gradient(to right, rgba(255,0,0,0.6) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,0,0,0.6) 1px, transparent 1px),
+        url('space.svg');
+      background-size: 64px 64px, 64px 64px, 64px 64px;
+    }
+
+    .text-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: transparent;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.5);
+      pointer-events: none;
+      text-align: center;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body id="preview-body">
+
+  <h1>シームレス星空タイルプレビュー</h1>
+  
+  <div class="controls">
+    <label>
+      <input type="checkbox" id="grid-toggle">
+      タイルの境界線（赤線）を表示して継ぎ目を確認する
+    </label>
+  </div>
+
+  <div class="preview-section">
+    <h2>サイズ: 256px (原寸大)</h2>
+    <div class="tile-container size-256"></div>
+  </div>
+
+  <div class="preview-section">
+    <h2>サイズ: 128px (1/2 縮小)</h2>
+    <div class="tile-container size-128"></div>
+  </div>
+
+  <div class="preview-section">
+    <h2>サイズ: 64px (1/4 縮小) &amp; テキスト視認性テスト</h2>
+    <div class="tile-container size-64">
+      <div class="text-overlay">
+        背景の上に配置された白文字が読みやすいか確認。<br>
+        星空が過度に主張せず、文字の邪魔になっていないかを検証します。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // インラインスタイルは使用せず、クラスの付け替えで状態を管理する
+    document.getElementById('grid-toggle').addEventListener('change', function(e) {
+      const body = document.getElementById('preview-body');
+      if (e.target.checked) {
+        body.classList.add('show-grid');
+      } else {
+        body.classList.remove('show-grid');
+      }
+    });
+  </script>
+</body>
+</html>

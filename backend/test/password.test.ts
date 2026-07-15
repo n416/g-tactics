@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { pbkdf2Sync, randomBytes, createHash } from 'node:crypto'
-import { hashPassword, verifyPassword } from '../src/utils/password'
+import { hashPassword, verifyPassword, MAX_WORKERS_ITERATIONS } from '../src/utils/password'
 
 describe('パスワードのハッシュ化', () => {
   it('ハッシュ化した値は元のパスワードで照合できる', async () => {
@@ -21,8 +21,31 @@ describe('パスワードのハッシュ化', () => {
     const parts = stored.split('$')
     expect(parts).toHaveLength(4)
     expect(parts[0]).toBe('pbkdf2')
-    // OWASP の PBKDF2-HMAC-SHA256 推奨値
-    expect(Number(parts[1])).toBe(600_000)
+    expect(Number(parts[1])).toBe(MAX_WORKERS_ITERATIONS)
+  })
+
+  // ★このテストはローカルでは「効かない制約」を守るためにある。
+  //
+  // Cloudflare Workers は PBKDF2 の反復回数を 100,000 までしか受け付けない:
+  //   Pbkdf2 failed: iteration counts above 100000 are not supported (requested 600000).
+  // ところが miniflare も Node もこの上限を課さないため、超過しても手元では全て通り、
+  // 本番でだけ 500 になる。実際に 600,000 で本番の新規登録が全滅した。
+  // 反復回数を上げたくなったら、まずここが落ちる。
+  it('反復回数は Workers の上限を超えない（超えると本番でだけ 500 になる）', async () => {
+    const stored = await hashPassword('password123')
+    const iterations = Number(stored.split('$')[1])
+    expect(iterations).toBeLessThanOrEqual(MAX_WORKERS_ITERATIONS)
+    expect(MAX_WORKERS_ITERATIONS).toBe(100_000)
+  })
+
+  it('上限を超える回数で保存された行は、照合せず false を返す', async () => {
+    // 本番では pbkdf2 自体が例外になる。黙って「パスワード違い」にすると
+    // 原因不明のロックアウトになるので、明示的に弾いていることを固定する。
+    const salt = randomBytes(16)
+    const hash = pbkdf2Sync(Buffer.from('password123', 'utf8'), salt, 600_000, 32, 'sha256')
+    const stored = `pbkdf2$600000$${salt.toString('base64')}$${hash.toString('base64')}`
+    const r = await verifyPassword(stored, 'password123')
+    expect(r.ok).toBe(false)
   })
 
   it('同じパスワードでも毎回違うハッシュになる（ソルトが効いている）', async () => {
@@ -76,7 +99,7 @@ describe('パスワードのハッシュ化', () => {
   // 「作った管理者がログインできない」という形で初めて発覚する。
   it('make_admin.mjs (node:crypto) が作るハッシュを本体が照合できる', async () => {
     const password = 'admin-password-123'
-    const iterations = 600_000
+    const iterations = 100_000
     const salt = randomBytes(16)
     const hash = pbkdf2Sync(Buffer.from(password, 'utf8'), salt, iterations, 32, 'sha256')
     const stored = `pbkdf2$${iterations}$${salt.toString('base64')}$${hash.toString('base64')}`
@@ -87,9 +110,10 @@ describe('パスワードのハッシュ化', () => {
   })
 
   it('反復回数を後から上げても、古い回数で保存された行を照合できる', async () => {
-    // 将来 ITERATIONS を引き上げたときに既存行が読めなくならないことの担保
+    // 将来 ITERATIONS を引き上げたときに既存行が読めなくならないことの担保。
+    // 現行(100,000)より低い回数で保存された行を模す。
     const password = 'password123'
-    const iterations = 100_000 // 現行より低い回数で保存された行を模す
+    const iterations = 50_000
     const salt = randomBytes(16)
     const hash = pbkdf2Sync(Buffer.from(password, 'utf8'), salt, iterations, 32, 'sha256')
     const stored = `pbkdf2$${iterations}$${salt.toString('base64')}$${hash.toString('base64')}`

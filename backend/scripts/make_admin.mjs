@@ -58,7 +58,11 @@ const sqlStr = (s) => `'${String(s).replace(/'/g, "''")}'`;
 // 本体は WebCrypto、こちらは node:crypto を使うが、
 // PBKDF2-HMAC-SHA256 / UTF-8 の平文 / 生バイトのソルト という条件が同じなので出力は一致する。
 // （この一致は test/password.test.ts が検証している）
-const PBKDF2_ITERATIONS = 600_000;
+// src/utils/password.ts の ITERATIONS と必ず同じ値にすること。
+// node:crypto はいくらでも大きい回数を受け付けるが、Cloudflare Workers は
+// 100,000 までしか受け付けない（超えると本番でだけ検証が例外になり、
+// ここで作った管理者が二度とログインできなくなる）。
+const PBKDF2_ITERATIONS = 100_000;
 const hashPassword = (password) => {
   const salt = randomBytes(16);
   const hash = pbkdf2Sync(Buffer.from(password, 'utf8'), salt, PBKDF2_ITERATIONS, 32, 'sha256');

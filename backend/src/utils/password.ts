@@ -8,23 +8,41 @@
  * 利用者がパスワードを使い回していれば被害が他サービスへ波及する。
  *
  * 【方式】
- * PBKDF2-HMAC-SHA256 / 600,000回 / ソルト16バイト / 出力32バイト。
- * 反復回数は OWASP の PBKDF2-HMAC-SHA256 に対する推奨値。
+ * PBKDF2-HMAC-SHA256 / 100,000回 / ソルト16バイト / 出力32バイト。
  *
  * bcrypt/argon2 を使っていないのは、Workers がネイティブモジュールを
  * 読めないため。PBKDF2 は WebCrypto に標準で入っており、Workers でも
  * Node（テスト環境）でも同じコードが動く。
- * 600,000回は Workers Paid の CPU 上限（既定30秒）に対して十分収まる。
- * ※ Free プラン（CPU 10ms）へ移る場合はこの回数では超過するので注意。
+ *
+ * 【反復回数が 100,000 で頭打ちな理由】
+ * OWASP は PBKDF2-HMAC-SHA256 に 600,000回 を推奨しているが、
+ * Cloudflare Workers の本番ランタイムはそれを受け付けない:
+ *   Pbkdf2 failed: iteration counts above 100000 are not supported (requested 600000).
+ * これは CPU 時間の制約でもプランの制約でもなく、API のハード上限。
+ *
+ * ★ローカル(miniflare)も Node(vitest)もこの上限を課さない。
+ *   そのため 600,000回 は手元では全て通り、本番でだけ 500 になった
+ *   （実際に登録が全滅した）。ここを上げるときは必ず本番で叩いて確かめること。
+ *   下の MAX_WORKERS_ITERATIONS と test/password.test.ts が再発を止める。
+ *
+ * 100,000回は推奨値を下回るが、レインボーテーブルを無効化するのはソルトであり、
+ * 反復回数は「DBが盗まれた後の総当たりを遅くする」追加の保険。
+ * 無ソルト SHA-256 の1回だった以前からは桁違いに堅い。
+ * さらに強くするなら nodejs_compat を有効にして node:crypto の scrypt を使う手がある。
  *
  * 【保存形式】
  *   pbkdf2$<iterations>$<salt_b64>$<hash_b64>
- * 先頭に方式と反復回数を持たせてあるので、後から回数を上げても
+ * 先頭に方式と反復回数を持たせてあるので、後から回数を変えても
  * 既存の行を読めなくならない（照合は行に書かれた回数で行う）。
  * ============================================================ */
 
 const ALGO = 'pbkdf2'
-const ITERATIONS = 600_000
+
+/** Cloudflare Workers が受け付ける PBKDF2 反復回数の上限。
+ * これを超えると本番でだけ実行時エラーになる（ローカルでは再現しない）。 */
+export const MAX_WORKERS_ITERATIONS = 100_000
+
+const ITERATIONS = 100_000
 const SALT_BYTES = 16
 const HASH_BITS = 256
 
@@ -111,10 +129,23 @@ export async function verifyPassword(stored: string, password: string): Promise<
   const iterations = Number(parts[1])
   if (!Number.isInteger(iterations) || iterations <= 0) return { ok: false, needsUpgrade: false }
 
+  // 上限を超える回数で保存された行は、本番では検証そのものが例外になる。
+  // 黙って「パスワードが違う」として返すと原因不明のロックアウトになるので、
+  // ここで明示的に落として記録する。
+  // （100,000 超で保存できてしまった時期は無いはずだが、ローカルは上限を課さないため
+  //   手元のDBには存在しうる。その状態を本番へ持ち込めば必ずここに来る）
+  if (iterations > MAX_WORKERS_ITERATIONS) {
+    console.error(
+      `password hash has ${iterations} iterations, but Workers supports at most ${MAX_WORKERS_ITERATIONS}. ` +
+      `この行は本番で照合できない。`
+    )
+    return { ok: false, needsUpgrade: false }
+  }
+
   try {
     const salt = fromB64(parts[2])
     const expected = fromB64(parts[3])
-    // 反復回数は行に書かれた値を使う。後から ITERATIONS を上げても古い行を照合できる。
+    // 反復回数は行に書かれた値を使う。後から ITERATIONS を変えても古い行を照合できる。
     const actual = await pbkdf2(password, salt, iterations)
     return { ok: safeEqual(actual, expected), needsUpgrade: iterations < ITERATIONS }
   } catch {

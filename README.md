@@ -154,18 +154,40 @@ npx wrangler d1 execute gtactics-db --remote --file ./tools/p57_add_google_sub.s
 
 ## パスワードの保存方式
 
-`src/utils/password.ts` が唯一の正です。**PBKDF2-HMAC-SHA256 / 60万回 / ソルト16バイト**
+`src/utils/password.ts` が唯一の正です。**PBKDF2-HMAC-SHA256 / 10万回 / ソルト16バイト**
 （保存形式 `pbkdf2$<反復回数>$<salt_b64>$<hash_b64>`）。
 
 - 以前は無ソルトの SHA-256 でした。ログインは旧形式も受け付け、**認証に成功した時点で
   自動的に新形式へ書き換えます**。既存アカウントは何もしなくてもそのまま使えます。
-- 反復回数は保存値の中に持たせてあるので、後から引き上げても既存行を照合できます。
+- 反復回数は保存値の中に持たせてあるので、後から変えても既存行を照合できます。
 - Workers はネイティブモジュールを読めないため bcrypt/argon2 は使えません。PBKDF2 は
   WebCrypto 標準で、Workers でもテストの Node でも同じコードが動きます。
-- **60万回は Workers Paid 前提**です（実測 約200ms/回。CPU 上限は既定30秒）。
-  Free プラン（CPU 上限 10ms）へ移る場合はこの回数では超過します。
 - `scripts/make_admin.mjs` は `node:crypto` で同じ形式を作ります。ここがズレると
   作った管理者がログインできなくなるため、両者の一致を `test/password.test.ts` が検証しています。
+
+### ⚠ 反復回数を上げてはいけない（10万回が Workers のハード上限）
+
+OWASP は PBKDF2-HMAC-SHA256 に **60万回**を推奨していますが、**Cloudflare Workers は
+受け付けません**。
+
+```
+Pbkdf2 failed: iteration counts above 100000 are not supported (requested 600000).
+```
+
+これは CPU 時間の制約でもプランの制約でもなく、**API のハード上限**です。
+
+**そして厄介なことに、ローカル(miniflare)も Node(vitest)もこの上限を課しません。**
+実際に 60万回で実装したとき、テスト325件も手元の動作確認もすべて通り、**本番でだけ
+新規登録が全滅**しました（ログインは移行処理が try/catch の中だったため生き残り、
+旧ハッシュのまま黙って移行されない状態になっていました）。
+
+再発防止として、`MAX_WORKERS_ITERATIONS` を超える値は `test/password.test.ts` が落とします。
+**この上限は手元では絶対に再現しないので、ここを触るときは必ず本番で実際に登録して確かめてください。**
+
+10万回は推奨値を下回りますが、レインボーテーブルを無効化するのは**ソルト**であり、反復回数は
+「DB が盗まれた後の総当たりを遅くする」追加の保険です。無ソルト SHA-256 の1回だった以前からは
+桁違いに堅くなっています。さらに強くするなら `nodejs_compat` を有効にして `node:crypto` の
+scrypt を使う手があります（未検証）。
 
 ## テスト・型チェック
 

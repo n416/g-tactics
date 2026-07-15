@@ -234,6 +234,43 @@ DB の `units.image` に書かれたファイル名がそのままキーにな�
 
 ## デプロイ
 
+```bash
+cd backend
+npm run preflight   # 本番の状態を点検（読み取りのみ。落ちても何も壊さない）
+npm run deploy      # フロントのビルド → Worker のデプロイ
+```
+
+**通常はこれだけです。** `npm run deploy` はフロントのビルドを含みます
+（`wrangler.jsonc` が `../frontend/dist` を配信するため、ビルドを忘れると
+**古い画面が無言でデプロイされる**。それを起こせないよう1コマンドにまとめてあります）。
+
+`npm run preflight` は、本番で「無言で壊れる」種類のものだけを実際に本番へ問い合わせて確認します。
+
+- secret の入れ忘れ → ログインだけが動かない
+- マイグレーションの流し忘れ → baseline と実 DB が drift する
+- `dist` が `src` より古い → 古い画面が配信される
+
+NG があると、実行すべきコマンドをその場に表示します。
+
+### 初回だけ必要なこと
+
+```bash
+cd backend
+npx wrangler secret put JWT_SECRET             # 未設定だと認証が動かない
+npx wrangler secret put GOOGLE_CLIENT_SECRET   # 未設定だと Google ログインだけが落ちる
+npx wrangler d1 execute gtactics-db --remote --file ./migrations/0001_baseline.sql
+```
+
+Google 連携には Console 側の設定も要ります（「Google アカウント連携のセットアップ」の節）。
+`seed_dev.sql` は開発用テストキャラなので**本番には流さないでください**。
+
+### スキーマを変えたとき
+
+baseline を編集しただけでは本番は変わりません。`tools/*.sql` を `--remote` にも流す必要があります
+（「稼働中の DB に必要な追随」の節）。**流し忘れは preflight が検知します。**
+
+### 構成
+
 フロント・API・画像はすべて 1 つの Worker (`g-tactics`) に集約されています。
 
 ```
@@ -242,24 +279,8 @@ DB の `units.image` に書かれたファイル名がそのままキーにな�
 /*              → フロントの静的アセット（SPA フォールバック）
 ```
 
-```bash
-# 1) フロントをビルド（機体画像は自動で dist から除外される）
-cd frontend && npm run build
-
-# 2) Worker をデプロイ
-cd ../backend
-npx wrangler secret put JWT_SECRET   # 初回のみ。未設定だと認証が動かない
-npm run deploy
-```
-
-本番 DB の初期化は初回のみ:
-
-```bash
-cd backend
-npx wrangler d1 execute gtactics-db --remote --file ./migrations/0001_baseline.sql
-```
-
-`seed_dev.sql` は開発用テストキャラなので**本番には流さないでください**。
+機体画像は R2 にあり、リポジトリにもデプロイ成果物にも含まれません。
+そのためコードをデプロイしても画像は消えません（「機体画像について」の節）。
 
 ## ライセンス / 注意
 

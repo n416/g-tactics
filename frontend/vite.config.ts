@@ -25,6 +25,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), excludeUnitImagesFromBuild()],
     server: {
+      port: 5199,
       // 開発時のみ: 相対 /api をローカルの wrangler dev へプロキシ。
       // 接続先ポートは .env.local の VITE_DEV_API_PORT で変更できる。
       proxy: {

@@ -442,3 +442,147 @@ describe('Tournament formats (P33/P39)', () => {
     })
   })
 })
+
+// 開催地形（field_terrain）: 原作準拠で主催者が作成時に選択。-2=ランダム（開始時に抽選して確定）。
+// 作成→エントリー→実行→保存されたリプレイ(meta)までのフル実行E2E。
+describe('Tournament field_terrain (開催地形のフル実行E2E)', () => {
+  let env: any
+  const generateToken = async (id: string) => await sign({ id }, 'test-secret', 'HS256')
+
+  const setup = async () => {
+    const db = new D1Mock()
+    await applySchema(db)
+    env = { DB: db, JWT_SECRET: 'test-secret' }
+    await env.DB.prepare(
+      `INSERT INTO characters (id, password_hash, handle_name, chara_name, is_admin, money, fame, unit_id, level)
+       VALUES
+       ('admin1', 'hash', 'Admin', 'AdminChara', 1, 100000, 0, 1, 5),
+       ('p1', 'hash', 'P1', 'ぱいろっと1', 0, 1000, 0, 1, 5),
+       ('p2', 'hash', 'P2', 'ぱいろっと2', 0, 1000, 0, 2, 5),
+       ('p3', 'hash', 'P3', 'ぱいろっと3', 0, 1000, 0, 1, 5),
+       ('p4', 'hash', 'P4', 'ぱいろっと4', 0, 1000, 0, 2, 5)`
+    ).run()
+  }
+
+  const createTournament = async (extra: any = {}) => {
+    const token = await generateToken('admin1')
+    const res = await app.request('/api/tournaments', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: '地形大会', prize_money: 1000, entry_fee: 0, participant_limit: 8, ...extra })
+    }, env)
+    expect(res.status).toBe(200)
+    return await env.DB.prepare(`SELECT * FROM tournaments ORDER BY id DESC LIMIT 1`).first() as any
+  }
+
+  const enter = async (tid: number, cid: string, side?: number) => {
+    const token = await generateToken(cid)
+    const res = await app.request(`/api/tournaments/${tid}/entry`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: side ? JSON.stringify({ side }) : JSON.stringify({})
+    }, env)
+    expect(res.status).toBe(200)
+  }
+
+  const execute = async (tid: number) => {
+    const res = await app.request(`/api/tournaments/${tid}/execute`, { method: 'POST' }, env)
+    const j = await res.clone().json(); if (res.status !== 200) console.log("ERROR:", j)
+    expect(res.status).toBe(200)
+    return (await res.json()) as any
+  }
+
+  // 保存された全試合のリプレイ（log_text JSON）を取り出す
+  const loadMatches = async (tid: number) => {
+    const rows: any = await env.DB.prepare(`SELECT log_text FROM tournament_matches WHERE tournament_id = ?`).bind(tid).all()
+    return rows.results.map((r: any) => JSON.parse(r.log_text))
+  }
+
+  it('地形を指定した大会: 全試合のリプレイ meta.terrain が指定値になり、DB の値も変わらない', async () => {
+    await setup()
+    const t = await createTournament({ format: 0, field_terrain: 3 }) // 3=宇宙
+    expect(t.field_terrain).toBe(3)
+
+    for (const p of ['p1', 'p2', 'p3', 'p4']) await enter(t.id, p)
+    const json = await execute(t.id)
+    expect(json.success).toBe(true)
+    expect(json.champion_id).toBeTruthy()
+
+    const after: any = await env.DB.prepare(`SELECT field_terrain, status FROM tournaments WHERE id = ?`).bind(t.id).first()
+    expect(after.status).toBe(2)
+    expect(after.field_terrain).toBe(3) // 指定済みなら抽選で上書きされない
+
+    const matches = await loadMatches(t.id)
+    expect(matches.length).toBe(3) // 4人トーナメント=3試合
+    for (const m of matches) {
+      expect(m.meta.terrain).toBe(3)
+      expect(Array.isArray(m.events)).toBe(true) // リプレイ再生に使う events が保存されている
+      expect(m.meta.attackerName).toBeTruthy()
+    }
+  })
+
+  it('地形未指定(-2)の大会: 開始時に1〜5へ抽選・確定し、全試合の meta.terrain が一致する', async () => {
+    await setup()
+    const t = await createTournament({ format: 0 }) // field_terrain 未指定 → 既定 -2
+    expect(t.field_terrain).toBe(-2)
+
+    for (const p of ['p1', 'p2', 'p3', 'p4']) await enter(t.id, p)
+    const json = await execute(t.id)
+    expect(json.success).toBe(true)
+
+    const after: any = await env.DB.prepare(`SELECT field_terrain FROM tournaments WHERE id = ?`).bind(t.id).first()
+    expect(after.field_terrain).toBeGreaterThanOrEqual(1)
+    expect(after.field_terrain).toBeLessThanOrEqual(5)
+
+    const matches = await loadMatches(t.id)
+    expect(matches.length).toBe(3)
+    for (const m of matches) {
+      expect(m.meta.terrain).toBe(after.field_terrain) // 抽選値が全試合で共通
+    }
+  })
+
+  it('バトルロイヤル(1): 地形指定が確定し、保存された全試合の meta.terrain に反映される', async () => {
+    await setup()
+    const t = await createTournament({ format: 1, field_terrain: 2 }) // 2=水中
+    for (const p of ['p1', 'p2', 'p3', 'p4']) await enter(t.id, p)
+    const json = await execute(t.id)
+    expect(json.success).toBe(true)
+
+    const after: any = await env.DB.prepare(`SELECT field_terrain FROM tournaments WHERE id = ?`).bind(t.id).first()
+    expect(after.field_terrain).toBe(2)
+
+    // 撃破が発生した試合のみ保存される形式のため、保存分すべてを検証
+    const matches = await loadMatches(t.id)
+    for (const m of matches) {
+      expect(m.meta.terrain).toBe(2)
+    }
+  })
+
+  it('団体総力戦(3): 1試合が保存され meta.terrain に開催地形が入る', async () => {
+    await setup()
+    const t = await createTournament({ format: 3, field_terrain: 5 }) // 5=仮想空間
+    await enter(t.id, 'p1', 1)
+    await enter(t.id, 'p2', 1)
+    await enter(t.id, 'p3', 2)
+    await enter(t.id, 'p4', 2)
+    const json = await execute(t.id)
+    expect(json.success).toBe(true)
+
+    const matches = await loadMatches(t.id)
+    expect(matches.length).toBe(1)
+    expect(matches[0].meta.terrain).toBe(5)
+    expect(Array.isArray(matches[0].events)).toBe(true)
+  })
+
+  it('過去データ互換: field_terrain が範囲外(0など)でも実行時に1〜5へ確定する', async () => {
+    await setup()
+    const t = await createTournament({ format: 0, field_terrain: 0 }) // 異常値
+    for (const p of ['p1', 'p2']) await enter(t.id, p)
+    const json = await execute(t.id)
+    expect(json.success).toBe(true)
+
+    const after: any = await env.DB.prepare(`SELECT field_terrain FROM tournaments WHERE id = ?`).bind(t.id).first()
+    expect(after.field_terrain).toBeGreaterThanOrEqual(1)
+    expect(after.field_terrain).toBeLessThanOrEqual(5)
+  })
+})

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>地形背景 試作: スパロボ風ステージ</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0f172a; }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: linear-gradient(#c9a0c8 0%, #f5d9c4 55%, #f2e3d5 100%);
+  }
+
+  /* ---- parallax bands: [img][mirror][img][mirror]... translateX(-50%) = seamless ---- */
+  .band {
+    position: absolute;
+    left: 0;
+    display: flex;
+    animation: drift linear infinite;
+  }
+  .band img { height: 100%; width: auto; display: block; }
+  .band img:nth-child(even) { transform: scaleX(-1); }
+  @keyframes drift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .band.sky   { top: 0;    height: 72%; animation-duration: 300s; }
+  .band.far2  { bottom: 0; height: 52%; animation-duration: 120s; }
+  .band.far   { bottom: 0; height: 30%; animation-duration: 55s; }
+  .band.mid   { bottom: 0; height: 24%; animation-duration: 22s; }
+  .band.fore  { bottom: 0; height: 18%; animation-duration: 9s; }
+
+  body.pause .band { animation-play-state: paused; }
+  body.rush .band.sky  { animation-duration: 75s; }
+  body.rush .band.far2 { animation-duration: 18s; }
+  body.rush .band.far  { animation-duration: 7s; }
+  body.rush .band.mid  { animation-duration: 2.8s; }
+  body.rush .band.fore { animation-duration: 1.2s; }
+
+  /* ---- units ---- */
+  .unit {
+    position: absolute;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.45));
+    animation: bob 2.4s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%, 100% { translate: 0 0; }
+    50%      { translate: 0 -6px; }
+  }
+  .unit.ally  { right: 16%; bottom: 5%;  height: 24%; }
+  .unit.enemy { left: 16%;  bottom: 8%; height: 20%; animation-delay: 1.2s; }
+  .unit.enemy img { transform: scaleX(-1); }
+  .unit img { height: 100%; }
+
+  /* ---- SRW-style status plates ---- */
+  .plate {
+    position: absolute;
+    top: 12px;
+    width: 260px;
+    padding: 8px 12px;
+    background: rgba(15, 23, 42, 0.82);
+    border: 1px solid #475569;
+    border-radius: 4px;
+    color: #e2e8f0;
+    font-family: system-ui, sans-serif;
+    font-size: 13px;
+  }
+  .plate.left  { left: 12px; }
+  .plate.right { right: 12px; }
+  .plate .name { font-weight: 700; margin-bottom: 4px; }
+  .bar { height: 8px; background: #334155; border-radius: 2px; margin: 3px 0; overflow: hidden; }
+  .bar i { display: block; height: 100%; }
+  .hp i { width: 82%; background: linear-gradient(90deg, #22c55e, #86efac); }
+  .en i { width: 60%; background: linear-gradient(90deg, #3b82f6, #93c5fd); }
+
+  /* ---- demo controls ---- */
+  .controls { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+  .controls button {
+    padding: 6px 14px; background: rgba(15,23,42,0.85); color: #e2e8f0;
+    border: 1px solid #475569; border-radius: 4px; cursor: pointer; font-size: 13px;
+  }
+  .controls button.active { border-color: #00d2ff; color: #00d2ff; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="band sky"><img src="/images/terrain/t1b-strip1.png"><img src="/images/terrain/t1b-strip1.png"><img src="/images/terrain/t1b-strip1.png"><img src="/images/terrain/t1b-strip1.png"></div>
+  <div class="band far2"><img src="/images/terrain/t1b-far2.png"><img src="/images/terrain/t1b-far2.png"><img src="/images/terrain/t1b-far2.png"><img src="/images/terrain/t1b-far2.png"></div>
+  <div class="band far"><img src="/images/terrain/t1b-strip3.png"><img src="/images/terrain/t1b-strip3.png"><img src="/images/terrain/t1b-strip3.png"><img src="/images/terrain/t1b-strip3.png"></div>
+  <div class="band mid"><img src="/images/terrain/t1b-strip4.png"><img src="/images/terrain/t1b-strip4.png"><img src="/images/terrain/t1b-strip4.png"><img src="/images/terrain/t1b-strip4.png"></div>
+  <div class="band fore"><img src="/images/terrain/t1b-strip5.png"><img src="/images/terrain/t1b-strip5.png"><img src="/images/terrain/t1b-strip5.png"><img src="/images/terrain/t1b-strip5.png"></div>
+
+  <div class="unit enemy"><img src="/images/units/MS-06S.gif" alt="MS-06S"></div>
+  <div class="unit ally"><img src="/images/units/RX-78-2.gif" alt="RX-78-2"></div>
+
+  <div class="plate left">
+    <div class="name">シャア専用ザクII</div>
+    <div class="bar hp"><i></i></div>
+    <div class="bar en"><i></i></div>
+  </div>
+  <div class="plate right">
+    <div class="name">ガンダム</div>
+    <div class="bar hp"><i></i></div>
+    <div class="bar en"><i></i></div>
+  </div>
+
+  <div class="controls">
+    <button data-mode="pause">停止</button>
+    <button data-mode="" class="active">待機（ドリフト）</button>
+    <button data-mode="rush">突撃（高速）</button>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('.controls button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.body.className = b.dataset.mode;
+      document.querySelectorAll('.controls button').forEach(x => x.classList.toggle('active', x === b));
+    });
+  });
+</script>
+</body>
+</html>

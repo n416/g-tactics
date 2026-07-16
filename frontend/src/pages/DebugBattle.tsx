@@ -33,6 +33,7 @@ export const DebugBattle: React.FC = () => {
   const [attackerState, setAttackerState] = useState({
     handle_name: 'アムロ',
     unit_name: 'テスト攻撃機',
+    unit_image: 'RX-78-2.gif',
     unit_base_hp: 100,
     unit_base_en: 100,
     mobility: 20,
@@ -42,6 +43,7 @@ export const DebugBattle: React.FC = () => {
   const [defenderState, setDefenderState] = useState({
     handle_name: 'シャア',
     unit_name: 'テスト防御機',
+    unit_image: 'MS-06S.gif',
     unit_base_hp: 100,
     unit_base_en: 100,
     mobility: 20,
@@ -54,6 +56,8 @@ export const DebugBattle: React.FC = () => {
 
   const [attackerTokusyu, setAttackerTokusyu] = useState<string[]>(['NT_D']);
   const [defenderTokusyu, setDefenderTokusyu] = useState<string[]>(['24', '-44']);
+
+  const [terrain, setTerrain] = useState<number>(1);
 
   const [battleData, setBattleData] = useState<{ events: BattleEvent[], meta: BattleMeta } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -70,7 +74,8 @@ export const DebugBattle: React.FC = () => {
         attacker: { ...attackerState, unit_tokusyu: attackerTokusyu.join(',') },
         defender: { ...defenderState, unit_tokusyu: defenderTokusyu.join(',') },
         attackerWeapon,
-        defenderWeapon
+        defenderWeapon,
+        terrain
       };
 
       const response = await fetch('/api/battle/debug', {
@@ -111,6 +116,17 @@ export const DebugBattle: React.FC = () => {
 
       {error && <div className="error-message">{error}</div>}
 
+      <div className="form-group" style={{ marginBottom: '20px' }}>
+        <label>戦場地形（背景の確認用）</label>
+        <select value={terrain} onChange={e => setTerrain(Number(e.target.value))}>
+          <option value={1}>地上 (1)</option>
+          <option value={2}>水中 (2)</option>
+          <option value={3}>宇宙 (3)</option>
+          <option value={4}>空中 (4)</option>
+          <option value={5}>仮想空間 (5)</option>
+        </select>
+      </div>
+
       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         <div data-testid="attacker-section" style={{ flex: 1, minWidth: '300px' }}>
           <h3 style={{ color: '#00d2ff' }}>攻撃側</h3>
@@ -121,6 +137,10 @@ export const DebugBattle: React.FC = () => {
           <div className="form-group">
             <label>機体名</label>
             <input type="text" value={attackerState.unit_name} onChange={e => handleAttackerChange('unit_name', e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>機体画像ファイル名（images/units/ 内）</label>
+            <input type="text" value={attackerState.unit_image} onChange={e => handleAttackerChange('unit_image', e.target.value)} />
           </div>
           <div className="form-group">
             <label>HP</label>
@@ -177,6 +197,10 @@ export const DebugBattle: React.FC = () => {
           <div className="form-group">
             <label>機体名</label>
             <input type="text" value={defenderState.unit_name} onChange={e => handleDefenderChange('unit_name', e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>機体画像ファイル名（images/units/ 内）</label>
+            <input type="text" value={defenderState.unit_image} onChange={e => handleDefenderChange('unit_image', e.target.value)} />
           </div>
           <div className="form-group">
             <label>HP</label>

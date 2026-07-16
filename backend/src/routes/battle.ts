@@ -278,7 +278,7 @@ battleApp.post('/simulator', async (c) => {
     return c.json({
       success: true, result: isSuccess, message: logs.join('\n'), events: events,
       requiresSkillForget,
-      meta: { attackerName: attacker.chara_name || attacker.handle_name, defenderName: defender.chara_name || defender.handle_name, attackerUnit: attacker.unit_name || '無人機', defenderUnit: defender.unit_name || '無人機', attackerImage: attacker.unit_image || null, defenderImage: defender.unit_image || null, rewardMoney, rewardExp, isSuccess },
+      meta: { attackerName: attacker.chara_name || attacker.handle_name, defenderName: defender.chara_name || defender.handle_name, attackerUnit: attacker.unit_name || '無人機', defenderUnit: defender.unit_name || '無人機', attackerImage: attacker.unit_image || null, defenderImage: defender.unit_image || null, rewardMoney, rewardExp, isSuccess, terrain: terrain || 1 },
       new_money: newMoney, new_exp: newExp, new_level: newLevel, level_up: newLevel > attacker.level
     })
 
@@ -366,14 +366,17 @@ battleApp.post('/debug', async (c) => {
       result: isSuccess,
       message: logs.join('\n'),
       events: events,
-      meta: { 
-        attackerName: attacker.handle_name, 
-        defenderName: defender.handle_name, 
-        attackerUnit: attacker.unit_name, 
-        defenderUnit: defender.unit_name, 
-        rewardMoney: 0, 
-        rewardExp: 0, 
-        isSuccess 
+      meta: {
+        attackerName: attacker.handle_name,
+        defenderName: defender.handle_name,
+        attackerUnit: attacker.unit_name,
+        defenderUnit: defender.unit_name,
+        attackerImage: attacker.unit_image || null,
+        defenderImage: defender.unit_image || null,
+        rewardMoney: 0,
+        rewardExp: 0,
+        isSuccess,
+        terrain: terrain || 1
       }
     });
 

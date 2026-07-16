@@ -35,9 +35,11 @@
 
 ## 残タスク
 
-- **meta.terrain の配線は battle.ts の2箇所のみ**。champion.ts / defense.ts / tournament.ts の
-  meta 生成（計5箇所、旧版参照）は未配線 → それらの戦闘は常に地上背景。
-  各モードの「その戦闘の地形」の決め方から要検討。
+- ~~meta.terrain の配線~~ → **全モード配線済み**。champion / defense は元から meta に terrain があり、
+  battle.ts（2箇所）と tournament.ts は本日配線した。
+  トーナメントは原作準拠で**主催者が作成時に開催地形を選択**（-2=ランダム、開始時に1〜5を抽選して
+  DB に確定）。抽選値は全試合の戦闘計算とリプレイ meta に共通で使う。
+  ※大会のフル実行（作成→エントリー→実行→リプレイ）は未テスト。型チェックのみ。
 - 旧素材の掃除: `frontend/public/images/bg-terrain-*.png`（26枚・画風不統一/スライスずれ）、
   `bg-speedlines*.png`、`ChatGPT Image 2026年7月16日 12_33_33.png`（t1bの元シートは
   スクラッチパッド消滅に備え保管を検討）。ユーザー判断待ち。

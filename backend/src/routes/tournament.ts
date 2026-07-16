@@ -406,6 +406,14 @@ tournamentApp.post('/:id/execute', async (c) => {
     const format = Number(tournament.format) || 0
     const isNpcId = (cid: string) => cid.startsWith('npc_') || cid.startsWith('NPC')
 
+    // 開催地形（原作: 主催者が大会作成時に選択）。-2=未指定/ランダムは開始時に1〜5を抽選して確定し、
+    // 以降の全試合の戦闘計算とリプレイ meta に同じ値を使う
+    const storedTerrain = Number(tournament.field_terrain)
+    const fieldTerrain = storedTerrain >= 1 && storedTerrain <= 5 ? storedTerrain : 1 + Math.floor(Math.random() * 5)
+    if (fieldTerrain !== storedTerrain) {
+      await c.env.DB.prepare(`UPDATE tournaments SET field_terrain = ? WHERE id = ?`).bind(fieldTerrain, id).run()
+    }
+
     const loadFighter = async (cid: string) => {
       const f: any = await getFullCharacter(c.env.DB, cid)
       if (!f) return null
@@ -433,7 +441,7 @@ tournamentApp.post('/:id/execute', async (c) => {
     const saveMatch = async (roundNum: number, matchIndex: number, f1: any, f2: any, winnerId: string, events: any[]) => {
       await c.env.DB.prepare(
         `INSERT INTO tournament_matches (tournament_id, round_num, match_index, fighter1_id, fighter2_id, winner_id, log_text) VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).bind(id, roundNum, matchIndex, f1.id, f2.id, winnerId, JSON.stringify({ events, meta: { attackerName: f1.handle_name, defenderName: f2.handle_name, attackerUnit: f1.unit_name || '', defenderUnit: f2.unit_name || '', attackerImage: f1.unit_image || null, defenderImage: f2.unit_image || null, isSuccess: winnerId === f1.id, rewardMoney: 0, rewardExp: 0 } })).run()
+      ).bind(id, roundNum, matchIndex, f1.id, f2.id, winnerId, JSON.stringify({ events, meta: { attackerName: f1.handle_name, defenderName: f2.handle_name, attackerUnit: f1.unit_name || '', defenderUnit: f2.unit_name || '', attackerImage: f1.unit_image || null, defenderImage: f2.unit_image || null, isSuccess: winnerId === f1.id, rewardMoney: 0, rewardExp: 0, terrain: fieldTerrain } })).run()
     }
 
     // 大会を進行中にする
@@ -453,7 +461,7 @@ tournamentApp.post('/:id/execute', async (c) => {
       const team1 = (await Promise.all(side1Ids.map(loadFighter))).filter(Boolean)
       const team2 = (await Promise.all(side2Ids.map(loadFighter))).filter(Boolean)
 
-      const res = simulateTeamBattle(team1 as any[], team2 as any[], 1)
+      const res = simulateTeamBattle(team1 as any[], team2 as any[], fieldTerrain)
       const winners = res.isSuccess ? team1 : team2
       const losers = res.isSuccess ? team2 : team1
 
@@ -486,7 +494,7 @@ tournamentApp.post('/:id/execute', async (c) => {
         const fa = alive[i], fb = alive[j]
         const key = `${fa.id}#${fb.id}`
         const kyori = pairKyori.get(key) ?? Math.floor(Math.random() * 100)
-        const r = simulateBattleRound(fa, fb, turn, 0, undefined, undefined, 1, [], [], 1, kyori)
+        const r = simulateBattleRound(fa, fb, turn, 0, undefined, undefined, fieldTerrain, [], [], 1, kyori)
         pairKyori.set(key, r.kyori)
         fa.hp = r.attackerHp
         fb.hp = r.defenderHp
@@ -538,7 +546,7 @@ tournamentApp.post('/:id/execute', async (c) => {
             if (cur2 && cur2.current_hp >= 0) { f2.hp = cur2.current_hp; f2.en = cur2.current_en }
           }
 
-          const result = simulateBattleRound(f1, f2, 1, 0)
+          const result = simulateBattleRound(f1, f2, 1, 0, undefined, undefined, fieldTerrain)
           f1.hp = result.attackerHp
           f2.hp = result.defenderHp
 

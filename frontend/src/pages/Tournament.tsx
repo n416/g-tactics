@@ -45,9 +45,12 @@ export const Tournament: React.FC = () => {
   const [tLimitTaikyu, setTLimitTaikyu] = useState(0);
   const [tLimitTaikyuJyo, setTLimitTaikyuJyo] = useState(0);
   const [tMask, setTMask] = useState(0);
+  // 開催地形（原作: 主催者が作成時に選択）。-2=ランダム（開始時に抽選して確定）
+  const [tTerrain, setTTerrain] = useState(-2);
 
   // P33/P39: 大会形式（原作 trmnt_setei.cgi:125-140）
   const FORMAT_NAMES = ['トーナメント', 'バトルロイヤル', 'シャッフルトーナメント', '団体総力戦'];
+  const TERRAIN_NAMES: Record<number, string> = { 1: '地上', 2: '水中', 3: '宇宙', 4: '空中', 5: '仮想空間' };
 
   let currentUserId = '';
   const token = localStorage.getItem('gtactics_token');
@@ -217,6 +220,7 @@ export const Tournament: React.FC = () => {
           team_leader: tTeamLeader ? 1 : 0,
           team_tactics: tTeamTactics ? 1 : 0,
           participant_mask: tMask,
+          field_terrain: tTerrain,
         })
       });
       const data = (await response.json()) as any;
@@ -362,6 +366,17 @@ export const Tournament: React.FC = () => {
                 <input type="datetime-local" className="cyber-input" value={tAutoStart} onChange={e => setTAutoStart(e.target.value)} />
               </div>
               <div className="cyber-input-wrapper">
+                <label className="cyber-label">開催地形</label>
+                <select className="cyber-input" value={tTerrain} onChange={e => setTTerrain(Number(e.target.value))}>
+                  <option value={-2}>ランダム（開始時に決定）</option>
+                  <option value={1}>地上</option>
+                  <option value={2}>水中</option>
+                  <option value={3}>宇宙</option>
+                  <option value={4}>空中</option>
+                  <option value={5}>仮想空間</option>
+                </select>
+              </div>
+              <div className="cyber-input-wrapper">
                 <label className="cyber-label">参加者表示選択</label>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', height: '100%', fontSize: '0.9rem' }}>
                   <label><input type="radio" name="tmask" value={0} checked={tMask === 0} onChange={() => setTMask(0)} /> 表示</label>
@@ -423,7 +438,7 @@ export const Tournament: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>【形式】{FORMAT_NAMES[Number(t.format) || 0]}{t.heal_between ? '・１戦毎恢復' : ''}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>【形式】{FORMAT_NAMES[Number(t.format) || 0]}{t.heal_between ? '・１戦毎恢復' : ''}　【地形】{TERRAIN_NAMES[Number(t.field_terrain)] || 'ランダム'}</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{t.description}</div>
                   </td>
                   <td style={{ padding: '1rem' }}>{getStatusText(t.status)}</td>

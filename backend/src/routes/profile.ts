@@ -416,9 +416,9 @@ profileApp.get('/news', async (c) => {
 
 profileApp.get('/icons', async (c) => {
   const icons = [
-    'face01.gif', 'face02.gif', 'face03.gif', 'face04.gif', 'face05.gif',
-    'face06.gif', 'face07.gif', 'face08.gif', 'face09.gif', 'face10.gif',
-    'face11.gif', 'face12.gif', 'face13.gif', 'face14.gif', 'face15.gif'
+    'face01.png', 'face02.png', 'face03.png', 'face04.png', 'face05.png',
+    'face06.png', 'face07.png', 'face08.png', 'face09.png', 'face10.png',
+    'face11.png', 'face12.png', 'face13.png', 'face14.png', 'face15.png'
   ]
   try {
     const { results } = await c.env.DB.prepare(`SELECT icon FROM characters WHERE icon != '' AND icon IS NOT NULL`).all()

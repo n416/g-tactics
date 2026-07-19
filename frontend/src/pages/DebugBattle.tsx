@@ -33,7 +33,7 @@ export const DebugBattle: React.FC = () => {
   const [attackerState, setAttackerState] = useState({
     handle_name: 'アムロ',
     unit_name: 'テスト攻撃機',
-    unit_image: 'RX-78-2.gif',
+    unit_image: 'RX-78-2.png',
     unit_base_hp: 100,
     unit_base_en: 100,
     mobility: 20,
@@ -43,7 +43,7 @@ export const DebugBattle: React.FC = () => {
   const [defenderState, setDefenderState] = useState({
     handle_name: 'シャア',
     unit_name: 'テスト防御機',
-    unit_image: 'MS-06S.gif',
+    unit_image: 'MS-06S.png',
     unit_base_hp: 100,
     unit_base_en: 100,
     mobility: 20,

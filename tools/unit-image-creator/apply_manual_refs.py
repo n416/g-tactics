@@ -7,11 +7,11 @@ from PIL import Image
 
 def main():
     # ユーザーが用意したJSONファイル（手動画像URLのマッピング）
-    # 形式: { "MS-21C.gif": "https://example.com/image.jpg" }
+    # 形式: { "MS-21C.png": "https://example.com/image.jpg" }
     mapping_file = Path("manual_refs_urls.json")
     if not mapping_file.exists():
         print(f"URLマッピングファイルが見つかりません: {mapping_file}")
-        print("例: { \"MS-21C.gif\": \"https://example.com/image.jpg\" } のようなJSONを作成してください。")
+        print("例: { \"MS-21C.png\": \"https://example.com/image.jpg\" } のようなJSONを作成してください。")
         return
 
     urls = json.loads(mapping_file.read_text(encoding="utf-8"))

@@ -86,7 +86,7 @@ def order_agy(ref: Path, row: dict) -> str | None:
     pose = pose_for(row)
     prompt = PROMPT.format(ref=ref, style=STYLE_REF, pose=pose)
     # --- 個別プロンプトの注入（設定ファイルから読み込み） ---
-    # 例: custom_prompts.json に { "unit_01.gif": "【超重要】絶対に脚を描画しないでください。" } のように定義する想定
+    # 例: custom_prompts.json に { "unit_01.png": "【超重要】絶対に脚を描画しないでください。" } のように定義する想定
     custom_prompts_file = PROD / "custom_prompts.json"
     if custom_prompts_file.exists():
         import json

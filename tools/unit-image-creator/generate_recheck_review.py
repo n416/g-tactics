@@ -4,7 +4,7 @@ from pathlib import Path
 PROD = Path(__file__).parent
 rows = list(csv.DictReader(open(PROD / "manifest.csv", encoding="utf-8")))
 
-TARGETS = ['MS-21C.gif']
+TARGETS = ['MS-21C.png']
 
 cards = []
 for r in rows:

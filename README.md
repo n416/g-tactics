@@ -239,14 +239,21 @@ npm run admin -- --id=<ログインID> --create --handle=<ハンドル名> --cha
 - ローカル開発用の実体: `frontend/public/images/units/`（Git 管理外。Vite dev server が配信）
 - 本番の配信元: R2（`units/<ファイル名>` というキーで格納）
 
-### 画像を追加・更新する
+### 画像を追加・更新する（差分アップロード）
+
+画像を新しく生成（または修正）した場合は、差分だけを抽出して本番 R2 およびローカル環境に自動同期するスクリプトを使用します。
+（画像生成元の `tmp-unit-images\production\out\` とローカル `frontend/public/images/units\` を比較し、新規・更新分だけを R2 とローカルへ反映します）
 
 ```bash
 cd backend
-npx wrangler r2 object put g-tactics-assets/units/<ファイル名> \
-  --remote --file ../frontend/public/images/units/<ファイル名> --content-type image/gif
+.\sync_images.ps1
 ```
 
+> **手動で1枚だけアップロードする場合**
+> ```bash
+> npx wrangler r2 object put g-tactics-assets/units/<ファイル名> \
+>   --remote --file ../frontend/public/images/units/<ファイル名> --content-type image/png
+> ```
 > **`--remote` を必ず付けること。** 付け忘れるとローカルのエミュレータに書き込まれ、
 > `Upload complete.` と表示されるのに本番には**一切反映されません**（無言で失敗する）。
 > 確認は `npx wrangler r2 object get g-tactics-assets/units/<ファイル名> --remote --file /tmp/x` で行う。

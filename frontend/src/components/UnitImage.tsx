@@ -27,17 +27,37 @@ type Props = {
   className?: string;
 };
 
-/** 機体画像。読み込み失敗時はプレースホルダに差し替える。 */
-export const UnitImage: React.FC<Props> = ({ file, alt, style, className }) => (
-  <img
-    src={unitImageUrl(file)}
-    alt={alt ?? ''}
-    className={className}
-    style={style}
-    onError={(e) => {
-      const el = e.currentTarget;
-      if (el.src.endsWith(NO_UNIT_IMAGE)) return; // プレースホルダ自体の失敗で無限ループしない
-      el.src = NO_UNIT_IMAGE;
-    }}
-  />
-);
+/** 機体画像。まずはPNGを優先し、失敗時は元の拡張子にフォールバック、最後にプレースホルダに差し替える。 */
+export const UnitImage: React.FC<Props> = ({ file, alt, style, className }) => {
+  // DBのファイル名が .gif 等でも、まずは .png としてリクエストする
+  const preferredFile = file ? file.replace(/\.[^.]+$/, '.png') : null;
+  const originalUrl = unitImageUrl(file);
+  const [src, setSrc] = React.useState(unitImageUrl(preferredFile));
+
+  // file prop が変わったら、再度 preferredFile のURLにリセットする
+  React.useEffect(() => {
+    setSrc(unitImageUrl(preferredFile));
+  }, [preferredFile]);
+
+  return (
+    <img
+      src={src}
+      alt={alt ?? ''}
+      className={className}
+      style={style}
+      onError={(e) => {
+        const el = e.currentTarget;
+        if (el.src.endsWith(NO_UNIT_IMAGE)) return; // プレースホルダ自体の失敗で無限ループしない
+
+        // PNG (preferred) の読み込みに失敗した場合、本来の拡張子(元のURL)にフォールバック
+        if (src !== originalUrl) {
+          setSrc(originalUrl);
+          return;
+        }
+
+        // 本来のURLでも失敗した場合はプレースホルダ
+        setSrc(NO_UNIT_IMAGE);
+      }}
+    />
+  );
+};

@@ -40,3 +40,5 @@ frontend/public/**/.wrangler/
 
 # Auth情報
 .seacret
+
+tmp*

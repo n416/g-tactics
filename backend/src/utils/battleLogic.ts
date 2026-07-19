@@ -130,7 +130,7 @@ export interface LTurnEvent {  // 仕様§5.1: 1ターン=1イベント
 }
 export interface LSideSnap {
   hp: number; maxHp: number; en: number; maxEn: number; ammo: number;
-  dmgDealt: number; hit: boolean; hitCount: number;
+  dmgDealt: number; hit: boolean; hitCount: number; evaded?: boolean;
 }
 
 export interface LResult {

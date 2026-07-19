@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BattleAnimation, type BattleEvent, type BattleMeta } from '../components/BattleAnimation';
 import './Register.css'; // 再利用
 
@@ -38,7 +38,9 @@ export const DebugBattle: React.FC = () => {
     unit_base_en: 100,
     mobility: 20,
     unit_sensor: 100,
-    unit_tokusyu: ''
+    unit_tokusyu: '',
+    quote_attack: 'いっけえええ！！',
+    quote_evade: '当たるものか！'
   });
   const [defenderState, setDefenderState] = useState({
     handle_name: 'シャア',
@@ -48,7 +50,9 @@ export const DebugBattle: React.FC = () => {
     unit_base_en: 100,
     mobility: 20,
     unit_sensor: 100,
-    unit_tokusyu: ''
+    unit_tokusyu: '',
+    quote_attack: 'ええぃ、連邦のモビルスーツは化け物か！',
+    quote_evade: '見え透いた攻撃を！'
   });
 
   const [attackerWeapon, setAttackerWeapon] = useState<CustomWeapon>({ name: 'ビームライフル', power: 45, isBeam: true });
@@ -62,6 +66,43 @@ export const DebugBattle: React.FC = () => {
   const [battleData, setBattleData] = useState<{ events: BattleEvent[], meta: BattleMeta } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [unitList, setUnitList] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/battle/debug/units')
+      .then(res => res.json())
+      .then((data: any) => {
+        if (data.success) setUnitList(data.units);
+      })
+      .catch(console.error);
+  }, []);
+
+  const applyUnitToState = (unitId: number, isAttacker: boolean) => {
+    const unit = unitList.find(u => u.id === unitId);
+    if (!unit) return;
+
+    const prevState = isAttacker ? attackerState : defenderState;
+    const newState = {
+      ...prevState,
+      unit_name: unit.name,
+      unit_image: unit.image || '',
+      unit_base_hp: unit.hp,
+      unit_base_en: unit.en,
+      mobility: unit.mobility,
+      unit_sensor: unit.sensor,
+      unit_tokusyu: unit.tokusyu || ''
+    };
+
+    const tokusyuArray = unit.tokusyu ? String(unit.tokusyu).split(',').filter(Boolean) : [];
+
+    if (isAttacker) {
+      setAttackerState(newState);
+      setAttackerTokusyu(tokusyuArray);
+    } else {
+      setDefenderState(newState);
+      setDefenderTokusyu(tokusyuArray);
+    }
+  };
 
   const handleAttackerChange = (key: string, value: any) => setAttackerState({ ...attackerState, [key]: value });
   const handleDefenderChange = (key: string, value: any) => setDefenderState({ ...defenderState, [key]: value });
@@ -107,16 +148,46 @@ export const DebugBattle: React.FC = () => {
     }
   };
 
+  const handleSwap = () => {
+    const tempState = { ...attackerState };
+    setAttackerState({ ...defenderState });
+    setDefenderState(tempState);
+
+    const tempWeapon = { ...attackerWeapon };
+    setAttackerWeapon({ ...defenderWeapon });
+    setDefenderWeapon(tempWeapon);
+
+    const tempTokusyu = [...attackerTokusyu];
+    setAttackerTokusyu([...defenderTokusyu]);
+    setDefenderTokusyu(tempTokusyu);
+  };
+
   return (
     <div className="register-container" style={{ maxWidth: '1000px' }}>
       <h2>バトルデバッグシミュレーター</h2>
-      <p style={{ color: '#aaa', fontSize: '12px' }}>
-        ※ チェックボックスで特殊能力を選択してシミュレーションを実行できます。
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+        <p style={{ color: '#aaa', fontSize: '12px', margin: 0 }}>
+          ※ チェックボックスで特殊能力を選択してシミュレーションを実行できます。
+        </p>
+        <button 
+          onClick={handleSwap}
+          style={{ 
+            background: 'var(--accent-color, #3b82f6)', 
+            color: '#fff', 
+            border: 'none', 
+            padding: '8px 16px', 
+            borderRadius: '4px', 
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          ⇄ 攻守入れ替え
+        </button>
+      </div>
 
       {error && <div className="error-message">{error}</div>}
 
-      <div className="form-group" style={{ marginBottom: '20px' }}>
+      <div className="form-group" style={{ marginBottom: '20px', marginTop: '10px' }}>
         <label>戦場地形（背景の確認用）</label>
         <select value={terrain} onChange={e => setTerrain(Number(e.target.value))}>
           <option value={1}>地上 (1)</option>
@@ -130,9 +201,24 @@ export const DebugBattle: React.FC = () => {
       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         <div data-testid="attacker-section" style={{ flex: 1, minWidth: '300px' }}>
           <h3 style={{ color: '#00d2ff' }}>攻撃側</h3>
+          <div className="form-group" style={{ marginBottom: '15px' }}>
+            <label style={{ color: '#00d2ff' }}>▼ プリセットから機体を選択して自動入力</label>
+            <select onChange={e => applyUnitToState(Number(e.target.value), true)} defaultValue="">
+              <option value="" disabled>-- 機体を選択 --</option>
+              {unitList.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </select>
+          </div>
           <div className="form-group">
             <label>パイロット名</label>
             <input type="text" value={attackerState.handle_name} onChange={e => handleAttackerChange('handle_name', e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>攻撃時のセリフ</label>
+            <input type="text" value={attackerState.quote_attack} onChange={e => handleAttackerChange('quote_attack', e.target.value)} placeholder="例：いっけえええ！！" />
+          </div>
+          <div className="form-group">
+            <label>回避/被弾時のセリフ</label>
+            <input type="text" value={attackerState.quote_evade} onChange={e => handleAttackerChange('quote_evade', e.target.value)} placeholder="例：当たるものか！" />
           </div>
           <div className="form-group">
             <label>機体名</label>
@@ -190,9 +276,24 @@ export const DebugBattle: React.FC = () => {
 
         <div data-testid="defender-section" style={{ flex: 1, minWidth: '300px' }}>
           <h3 style={{ color: '#ff0055' }}>防御側</h3>
+          <div className="form-group" style={{ marginBottom: '15px' }}>
+            <label style={{ color: '#ff0055' }}>▼ プリセットから機体を選択して自動入力</label>
+            <select onChange={e => applyUnitToState(Number(e.target.value), false)} defaultValue="">
+              <option value="" disabled>-- 機体を選択 --</option>
+              {unitList.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </select>
+          </div>
           <div className="form-group">
             <label>パイロット名</label>
             <input type="text" value={defenderState.handle_name} onChange={e => handleDefenderChange('handle_name', e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>攻撃時のセリフ</label>
+            <input type="text" value={defenderState.quote_attack} onChange={e => handleDefenderChange('quote_attack', e.target.value)} placeholder="例：ええぃ、化け物か！" />
+          </div>
+          <div className="form-group">
+            <label>回避/被弾時のセリフ</label>
+            <input type="text" value={defenderState.quote_evade} onChange={e => handleDefenderChange('quote_evade', e.target.value)} placeholder="例：見え透いた攻撃を！" />
           </div>
           <div className="form-group">
             <label>機体名</label>

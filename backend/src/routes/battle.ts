@@ -331,6 +331,14 @@ battleApp.post('/forget-skill', async (c) => {
     return c.json({ success: false, message: 'Server Error: ' + e.message }, 500)
   }
 })
+battleApp.get('/debug/units', async (c) => {
+  try {
+    const { results } = await c.env.DB.prepare('SELECT * FROM units ORDER BY id ASC').all()
+    return c.json({ success: true, units: results })
+  } catch (e: any) {
+    return c.json({ success: false, message: 'Server Error: ' + e.message }, 500)
+  }
+})
 
 
 battleApp.post('/debug', async (c) => {
@@ -344,10 +352,12 @@ battleApp.post('/debug', async (c) => {
     attacker.maxHp = calcMaxHp(attacker.unit_base_hp || 100, attacker.status_piloting || 10);
     attacker.hp = attacker.maxHp;
     attacker.en = calcMaxEn(attacker.unit_base_en || 100, attacker.status_piloting || 10);
+    attacker.battle_comments = JSON.stringify({ attack: attacker.quote_attack, evade: attacker.quote_evade });
 
     defender.maxHp = calcMaxHp(defender.unit_base_hp || 100, defender.status_piloting || 10);
     defender.hp = defender.maxHp;
     defender.en = calcMaxEn(defender.unit_base_en || 100, defender.status_piloting || 10);
+    defender.battle_comments = JSON.stringify({ attack: defender.quote_attack, evade: defender.quote_evade });
 
     let initialLogs: string[] = [];
     initialLogs.push(`=== 模擬戦開始 (デバッグ) ===`);

@@ -4,7 +4,7 @@ import { UnitImage } from './UnitImage';
 
 export interface LSideSnap {
   hp: number; maxHp: number; en: number; maxEn: number; ammo: number;
-  dmgDealt: number; hit: boolean; hitCount: number;
+  dmgDealt: number; hit: boolean; hitCount: number; evaded?: boolean;
 }
 
 export interface BattleEvent {
@@ -185,6 +185,8 @@ export const BattleAnimation: React.FC<BattleAnimationProps> = ({ events = [], m
 
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+  const [showResultOverlay, setShowResultOverlay] = useState(false);
+  const [hideResult, setHideResult] = useState(false);
   const [displayedMessages, setDisplayedMessages] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -236,6 +238,15 @@ export const BattleAnimation: React.FC<BattleAnimationProps> = ({ events = [], m
   }, [currentEventIndex, events, isFinished]);
 
   useEffect(() => {
+    if (isFinished) {
+      const timer = setTimeout(() => {
+        setShowResultOverlay(true);
+      }, 2500); // 爆発エフェクトを見せるため2.5秒遅延
+      return () => clearTimeout(timer);
+    }
+  }, [isFinished]);
+
+  useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
@@ -244,6 +255,8 @@ export const BattleAnimation: React.FC<BattleAnimationProps> = ({ events = [], m
   const handleReplay = () => {
     setCurrentEventIndex(0);
     setIsFinished(false);
+    setShowResultOverlay(false);
+    setHideResult(false);
     setDisplayedMessages([]);
   };
 
@@ -268,16 +281,41 @@ export const BattleAnimation: React.FC<BattleAnimationProps> = ({ events = [], m
     return `🔭 LONG RANGE (遠距離: ${distance})`;
   };
 
+  // 機体上のポップアップ用セリフの抽出
+  const currentAttackerQuotes: string[] = [];
+  const currentDefenderQuotes: string[] = [];
+  if (currentEvent) {
+    currentEvent.messages.forEach(msg => {
+      const quoteMatch = msg.match(/(.*?)『【(.+?)】「(.+?)」』(.*)/);
+      if (quoteMatch) {
+        const speakerName = quoteMatch[2];
+        const quoteText = quoteMatch[3];
+        if (speakerName === currentEvent.attackerName || speakerName === meta?.attackerName) {
+          currentAttackerQuotes.push(quoteText);
+        } else {
+          currentDefenderQuotes.push(quoteText);
+        }
+      }
+    });
+  }
+
   return (
     <div className="battle-animation-overlay">
-      <TerrainBackdrop terrain={terrain} />
+      <div className={`battle-stage-area terrain-${terrain}`}>
+        <TerrainBackdrop terrain={terrain} />
 
       {/* 地形の上に立つ機体（スパロボ風）。機体画像は素で左向きなので攻撃側を反転して向かい合わせる */}
       {attackerImage && (
         <div
-          className={`stage-unit stage-attacker ${currentEvent?.attacker?.hit ? 'stage-hit' : ''}`}
+          className={`stage-unit stage-attacker ${currentEvent?.attacker?.hit ? 'stage-hit' : ''} ${isFinished && meta && !meta.isSuccess ? 'stage-destroyed' : ''}`}
           style={{ bottom: `${unitBottom}%` }}
         >
+          {isFinished && meta && !meta.isSuccess && <div className="explosion-effect" />}
+          {currentAttackerQuotes.map((text, i) => (
+            <div key={i} className="on-stage-quote on-stage-quote-attacker animation-pop-in">
+              {text}
+            </div>
+          ))}
           <UnitImage file={attackerImage} alt={meta?.attackerUnit} />
           {currentEvent?.attacker?.dmgDealt ? currentEvent.attacker.dmgDealt > 0 && (
             <div className="damage-flash hit">
@@ -285,13 +323,22 @@ export const BattleAnimation: React.FC<BattleAnimationProps> = ({ events = [], m
               {currentEvent.attacker.hitCount > 1 ? ` (${currentEvent.attacker.hitCount} Hits!)` : ''}
             </div>
           ) : null}
+          {currentEvent?.attacker?.evaded && (
+            <div className="damage-flash evade">MISS</div>
+          )}
         </div>
       )}
       {defenderImage && (
         <div
-          className={`stage-unit stage-defender ${currentEvent?.defender?.hit ? 'stage-hit' : ''}`}
-          style={{ bottom: `${unitBottom + 2}%` }}
+          className={`stage-unit stage-defender ${currentEvent?.defender?.hit ? 'stage-hit' : ''} ${isFinished && meta && meta.isSuccess ? 'stage-destroyed' : ''}`}
+          style={{ bottom: `${unitBottom}%` }}
         >
+          {isFinished && meta && meta.isSuccess && <div className="explosion-effect" />}
+          {currentDefenderQuotes.map((text, i) => (
+            <div key={i} className="on-stage-quote on-stage-quote-defender animation-pop-in">
+              {text}
+            </div>
+          ))}
           <UnitImage file={defenderImage} alt={meta?.defenderUnit} />
           {currentEvent?.defender?.dmgDealt ? currentEvent.defender.dmgDealt > 0 && (
             <div className="damage-flash hit">
@@ -327,10 +374,12 @@ export const BattleAnimation: React.FC<BattleAnimationProps> = ({ events = [], m
         <span className="distance-label">ENGAGEMENT</span>
         <span className={`dist-val dist-${hani}`}>{getDistanceVisual()}</span>
       </div>
+      </div>
 
-      {/* メッセージウィンドウ（下部） */}
-      <div className="battle-message-window">
-        <div className="message-window-header">
+      <div className="battle-message-area">
+        {/* メッセージウィンドウ（下部） */}
+        <div className="battle-message-window">
+          <div className="message-window-header">
           <span className="cyber-title">COMBAT SIMULATION</span>
           <div className="controls">
             {!isFinished && (
@@ -339,27 +388,63 @@ export const BattleAnimation: React.FC<BattleAnimationProps> = ({ events = [], m
                 <button className="control-btn skip-all" onClick={handleFullSkip}>⏩ SKIP ALL</button>
               </>
             )}
+            {isFinished && hideResult && (
+              <>
+                <button className="control-btn" onClick={() => setHideResult(false)}>📊 リザルトへ戻る</button>
+                <button className="control-btn skip-all" onClick={onClose}>🔙 戦線復帰</button>
+              </>
+            )}
           </div>
         </div>
         <div className="message-log-container" ref={scrollRef}>
-          {displayedMessages.map((msg, idx) => (
-            <div key={idx} className="log-entry animation-slide-up">
-              {msg.split('\n').map((line, i) => <div key={i}>{line}</div>)}
-            </div>
-          ))}
+          {displayedMessages.map((msg, idx) => {
+            const quoteMatch = msg.match(/(.*?)『【(.+?)】「(.+?)」』(.*)/);
+            if (quoteMatch) {
+              const prefix = quoteMatch[1].trim();
+              const speakerName = quoteMatch[2];
+              const quoteText = quoteMatch[3];
+              const suffix = quoteMatch[4].trim();
+              const isAttacker = speakerName === (currentEvent?.attackerName || meta?.attackerName);
+              
+              return (
+                <React.Fragment key={idx}>
+                  {prefix && (
+                    <div className="log-entry animation-slide-up">
+                      {prefix.split('\n').map((line, i) => <div key={i}>{line}</div>)}
+                    </div>
+                  )}
+                  <div className={`chat-message animation-slide-up ${isAttacker ? 'chat-attacker' : 'chat-defender'}`}>
+                    <div className="chat-name">{speakerName}</div>
+                    <div className="chat-bubble">{quoteText}</div>
+                  </div>
+                  {suffix && (
+                    <div className="log-entry animation-slide-up">
+                      {suffix.split('\n').map((line, i) => <div key={i}>{line}</div>)}
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            }
+            return (
+              <div key={idx} className="log-entry animation-slide-up">
+                {msg.split('\n').map((line, i) => <div key={i}>{line}</div>)}
+              </div>
+            );
+          })}
           {!isFinished && currentEventIndex < events.length && (
             <div className="log-typing-indicator">Analyzing next maneuver...</div>
           )}
         </div>
+        </div>
       </div>
 
       {/* Result Overlay */}
-      {isFinished && (
+      {showResultOverlay && !hideResult && (
         <div className="result-glass-overlay animation-fade-in">
           <div className="result-card">
-            <h1 className={meta?.isSuccess ? 'text-victory' : 'text-defeat'}>
-              {meta?.isSuccess ? 'MISSION ACCOMPLISHED' : 'MISSION FAILED'}
-            </h1>
+            <h2 className={meta?.isSuccess ? 'text-victory' : 'text-defeat'}>
+              {meta?.isSuccess ? 'VICTORY' : 'DEFEATED'}
+            </h2>
             <div className="rewards-panel">
               <div className="reward-item">
                 <span className="reward-label">REWARD MONEY</span>
@@ -376,6 +461,14 @@ export const BattleAnimation: React.FC<BattleAnimationProps> = ({ events = [], m
               </button>
               <button className="submit-btn" onClick={handleReplay} style={{ flex: 1, margin: 0, background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)' }}>
                 リプレイを見る（巻き戻し）
+              </button>
+            </div>
+            <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+              <button 
+                onClick={() => setHideResult(true)} 
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.9rem' }}
+              >
+                リザルトを閉じてログを見る
               </button>
             </div>
           </div>

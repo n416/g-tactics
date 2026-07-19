@@ -33,18 +33,28 @@ export const UnitImage: React.FC<Props> = ({ file, alt, style, className }) => {
   const preferredFile = file ? file.replace(/\.[^.]+$/, '.png') : null;
   const originalUrl = unitImageUrl(file);
   const [src, setSrc] = React.useState(unitImageUrl(preferredFile));
+  const [aspectClass, setAspectClass] = React.useState('');
 
   // file prop が変わったら、再度 preferredFile のURLにリセットする
   React.useEffect(() => {
     setSrc(unitImageUrl(preferredFile));
+    setAspectClass(''); // リセット
   }, [preferredFile]);
+
+  const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth, naturalHeight } = e.currentTarget;
+    if (naturalWidth && naturalHeight) {
+      setAspectClass(naturalWidth >= naturalHeight ? 'img-landscape' : 'img-portrait');
+    }
+  };
 
   return (
     <img
       src={src}
       alt={alt ?? ''}
-      className={className}
+      className={`${className || ''} ${aspectClass}`.trim()}
       style={style}
+      onLoad={handleLoad}
       onError={(e) => {
         const el = e.currentTarget;
         if (el.src.endsWith(NO_UNIT_IMAGE)) return; // プレースホルダ自体の失敗で無限ループしない

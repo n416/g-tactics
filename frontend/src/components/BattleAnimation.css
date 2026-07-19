@@ -6,7 +6,28 @@
   bottom: 0;
   background: #0f172a;
   z-index: 2000;
+  display: flex;
+  flex-direction: column;
+}
+
+.battle-stage-area {
+  flex: 1;
+  position: relative;
   overflow: hidden;
+  min-height: 560px;
+}
+
+.battle-message-area {
+  height: 32%;
+  min-height: 180px;
+  flex-shrink: 0;
+  position: relative;
+  background: #0b1021;
+  border-top: 1px solid var(--border-color, #334155);
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* ==== 地形パララックス（スパロボ風） ==== */
@@ -49,15 +70,34 @@
 
 .stage-unit {
   position: absolute;
-  height: 28%;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
   animation: unitBob 2.6s ease-in-out infinite;
   image-rendering: pixelated;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* 地上（terrain: 1）のときはユニットを浮かばせない */
+.terrain-1 .stage-unit {
+  animation: none;
 }
 
 .stage-unit img {
-  height: 100%;
+  height: auto;
   width: auto;
+  max-height: 25vh; /* 機体が大きすぎないように制限を強める */
+}
+
+/* ユニット画像の縦長・横長に応じた最大幅制限 */
+.stage-unit img.img-landscape {
+  max-width: 36vw;
+}
+
+.stage-unit img.img-portrait {
+  max-width: 22vw;
+  min-width: 120px;
 }
 
 .stage-attacker {
@@ -72,6 +112,66 @@
 .stage-defender {
   right: 5%;
   animation-delay: 1.3s;
+}
+
+/* 防御側は元画像の向き（左向き）のままにして向かい合わせる */
+
+/* ==== 戦場（機体付近）に表示される一時的な吹き出し ==== */
+.on-stage-quote {
+  position: absolute;
+  top: -50px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f172a;
+  padding: 8px 14px;
+  border-radius: 16px;
+  font-weight: bold;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  z-index: 50;
+  text-shadow: none; /* ダメージ表記などの影響を排除 */
+}
+
+.on-stage-quote::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(255, 255, 255, 0.95);
+}
+
+.on-stage-quote-attacker {
+  left: 50%;
+  transform: translateX(-30%);
+  border: 2px solid #3b82f6;
+}
+.on-stage-quote-attacker::after {
+  left: 20%;
+  border-top-color: #3b82f6;
+}
+
+.on-stage-quote-defender {
+  right: 50%;
+  transform: translateX(30%);
+  border: 2px solid #ef4444;
+}
+.on-stage-quote-defender::after {
+  right: 20%;
+  border-top-color: #ef4444;
+}
+
+@keyframes popInStage {
+  0% { opacity: 0; scale: 0.5; }
+  60% { opacity: 1; scale: 1.1; }
+  100% { opacity: 1; scale: 1; }
+}
+
+.animation-pop-in {
+  animation: popInStage 0.3s forwards;
 }
 
 @keyframes unitBob {
@@ -89,6 +189,39 @@
   25% { margin-left: -6px; }
   50% { margin-left: 6px; }
   75% { margin-left: -6px; }
+}
+
+/* ==== 敗北時の爆発演出 ==== */
+.stage-unit.stage-destroyed {
+  animation: destroyedFade 1.8s ease-out forwards !important;
+}
+
+@keyframes destroyedFade {
+  0% { filter: brightness(1); opacity: 1; }
+  15% { filter: brightness(10) saturate(0); opacity: 1; } /* 爆発の瞬間に白飛び */
+  35% { filter: brightness(0); opacity: 1; } /* 真っ黒のシルエットになる */
+  75% { filter: brightness(0); opacity: 1; } /* しばらくシルエットを残す */
+  100% { filter: brightness(0); opacity: 0; } /* ゆっくりとフェードアウト */
+}
+
+.explosion-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, #fff 10%, #fbbf24 30%, #ef4444 60%, transparent 80%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 100;
+  animation: explosionBlast 1.2s ease-out forwards;
+}
+
+@keyframes explosionBlast {
+  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0.8; }
+  30% { transform: translate(-50%, -50%) scale(2.5); opacity: 1; background: radial-gradient(circle, #fff 20%, #f59e0b 50%, #dc2626 70%, transparent 90%); }
+  100% { transform: translate(-50%, -50%) scale(4); opacity: 0; }
 }
 
 /* ==== ステータスプレート ==== */
@@ -214,18 +347,16 @@
 /* ==== メッセージウィンドウ（下部・スパロボの台詞窓相当） ==== */
 
 .battle-message-window {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 14px;
-  width: min(680px, 76vw);
-  background: rgba(15, 23, 42, 0.85);
+  width: 100%;
+  max-width: 680px;
+  height: 100%;
+  background: #0f172a; /* 不透明にして下に何もないことを強調 */
   border: 1px solid var(--border-color, #334155);
   border-radius: var(--radius, 4px);
-  backdrop-filter: blur(6px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .message-window-header {
@@ -274,7 +405,7 @@
 
 .message-log-container {
   padding: 0.9rem 1.2rem;
-  height: 120px;
+  flex: 1;
   overflow-y: auto;
   color: var(--text-primary, #f8fafc);
   font-size: 0.9rem;
@@ -290,6 +421,63 @@
 
 .log-entry:last-child {
   border-bottom: none;
+}
+
+/* キャラクターのセリフ チャット風UI */
+.chat-message {
+  display: flex;
+  flex-direction: column;
+  margin: 12px 0;
+  width: 100%;
+}
+
+.chat-attacker {
+  align-items: flex-start;
+}
+
+.chat-defender {
+  align-items: flex-end;
+}
+
+.chat-name {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.chat-attacker .chat-name {
+  margin-left: 4px;
+}
+
+.chat-defender .chat-name {
+  margin-right: 4px;
+}
+
+.chat-bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: #fff;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  letter-spacing: 0.5px;
+}
+
+/* 攻撃側（左側）の吹き出し */
+.chat-attacker .chat-bubble {
+  background: #1e3a8a;
+  border-bottom-left-radius: 2px;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+/* 防御側（右側）の吹き出し */
+.chat-defender .chat-bubble {
+  background: #9f1239;
+  border-bottom-right-radius: 2px;
+  border: 1px solid rgba(225, 29, 72, 0.4);
 }
 
 .log-typing-indicator {
@@ -393,4 +581,28 @@
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* ==== スマホ表示向けの調整 ==== */
+@media (max-width: 768px) {
+  .battle-message-area {
+    height: 50%;
+  }
+
+  /* distance-chip をヘッダーのように帯状に配置 */
+  .distance-chip {
+    top: 0;
+    width: 100%;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    padding: 6px;
+    background: rgba(15, 23, 42, 0.95);
+  }
+
+  /* ヘッダー（distance-chip）と重ならないように下にずらす */
+  .status-plate {
+    top: 50px;
+  }
 }

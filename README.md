@@ -94,38 +94,7 @@ npx wrangler d1 execute gtactics-db --local --file ./seed_dev.sql   # 開発用�
 baseline を直接編集し、既存のローカル DB には `backend/tools/*.sql` の非破壊 ALTER で追随させます
 （既存ローカル DB の取りこぼしの修復は `tools/local_drift_repair.sql`）。
 
-### 稼働中の DB に必要な追随（P56 / P57）
 
-**新規に作る DB では何もする必要はありません**（baseline に反映済み）。
-すでに稼働している DB（本番を含む）にだけ、一度ずつ流してください。
-
-| | 内容 | 性質 |
-| --- | --- | --- |
-| **P56** | `characters.email` の廃止 | **破壊的**（列とデータを削除） |
-| **P57** | `characters.google_sub` の追加（Google 連携用） | 非破壊（ADD COLUMN + 索引） |
-
-```bash
-cd backend
-
-# P56: 消えて困る値が入っていないか先に確認する
-npx wrangler d1 execute gtactics-db --remote --command "SELECT COUNT(*) FROM characters WHERE email IS NOT NULL AND email <> '';"
-
-npx wrangler d1 execute gtactics-db --local  --file ./tools/p56_drop_email.sql
-npx wrangler d1 execute gtactics-db --remote --file ./tools/p56_drop_email.sql
-
-npx wrangler d1 execute gtactics-db --local  --file ./tools/p57_add_google_sub.sql
-npx wrangler d1 execute gtactics-db --remote --file ./tools/p57_add_google_sub.sql
-```
-
-> 他の `tools/*.sql` は「既存ローカル DB の追随用」ですが、**この2本は本番にも流す必要があります**。
-> 本番だけ列が食い違うと baseline と実 DB が drift します。過去に `tournaments` で同じ事故が
-> 起きています（`tools/local_drift_repair.sql` の経緯を参照）。
-
-`email` を廃止したのは、登録時に集めていたものの**アプリのどこからも読まれない書き込み専用の
-カラム**であり、使わない個人情報を保持し続ける理由が無いためです。
-
-`google_sub` の一意性は、baseline と `p57` の**両方で同一定義の部分索引**にしてあります
-（列に `UNIQUE` を書くと、`ADD COLUMN` しかできない既存 DB 側と schema が食い違うため）。
 
 ## ログイン方法の設計
 

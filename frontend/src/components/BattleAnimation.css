@@ -41,6 +41,8 @@
   position: absolute;
   left: 0;
   display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
   animation: bandDrift linear infinite;
   pointer-events: none;
 }
@@ -50,6 +52,7 @@
   width: auto;
   display: block;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .battle-bg-band img.band-mirror {

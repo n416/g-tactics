@@ -221,6 +221,273 @@ button:focus-visible {
 .cyber-button-accent { background: var(--accent-color); }
 .cyber-button-accent:hover:not(:disabled) { background: var(--accent-hover); }
 
+/* ---------- 3.5 ボタン階層 ----------
+ * 役割は3つだけ。ページ側で background をベタ書きしない。
+ *   .btn          … 通常操作（アウトライン）
+ *   .btn.primary  … その画面の主action。1画面に原則1〜2個
+ *   .btn.danger   … 破壊的操作（廃棄・リセット・低減など）のみ
+ * 大きさは .sm / .lg / .block で揃える。 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--border-color);
+}
+
+.btn.primary {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #fff;
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn.danger {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.btn.danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: var(--danger);
+}
+
+.btn.warn {
+  border-color: rgba(236, 201, 75, 0.5);
+  color: var(--warning);
+  background: rgba(236, 201, 75, 0.08);
+}
+
+.btn.warn:hover:not(:disabled) {
+  background: rgba(236, 201, 75, 0.18);
+  border-color: var(--warning);
+}
+
+.btn.sm { padding: 3px 10px; font-size: 0.8rem; font-weight: 500; }
+.btn.lg { padding: var(--space-3) var(--space-6); font-size: 1rem; }
+.btn.block { width: 100%; }
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---------- 3.6 見出し ----------
+ * ページタイトルは「英字の小さな肩ラベル + 日本語タイトル」で統一。
+ * 英日どちらを大きくするかがページごとにバラバラだったのを吸収する。 */
+.page-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.page-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* パネル内のセクション見出し。h3 のベタ書きスタイル（中央寄せ #aaa / 左寄せ #fff 混在）を置き換える */
+.sec-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-left: 3px solid var(--accent-color);
+  padding-left: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.sec-title .sub {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* ---------- 3.7 面（プレート） ----------
+ * 外枠は .glass-panel（Register.css）。その中に置く一段沈んだ面はこれ。 */
+.inset-panel {
+  background: var(--panel-inset);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+/* ---------- 3.8 NPC 会話 ----------
+ * フラナガン博士・アストナージなど「施設の主が話しかけてくる」枠。 */
+.npc-dialog {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  background: var(--panel-inset);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.npc-portrait {
+  width: 76px;
+  height: 76px;
+  flex: none;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  background: #000;
+}
+
+.npc-body { flex: 1; min-width: 0; }
+
+.npc-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--accent-cyan);
+  margin-bottom: 4px;
+}
+
+.npc-quote {
+  color: var(--text-primary);
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+.npc-note {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-top: var(--space-2);
+  line-height: 1.6;
+}
+
+/* ---------- 3.8.5 機体画像フレーム ----------
+ * MS 画像の見せ方を統一する枠。ページごとに 60/120/原寸ベタ貼りと
+ * バラバラだったのを、sm / md / lg の3サイズに揃える。 */
+.unit-frame {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex: none;
+}
+
+.unit-frame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.unit-frame.sm { width: 60px; height: 60px; }
+.unit-frame.md { width: 120px; height: 120px; }
+.unit-frame.lg { width: 160px; height: 160px; }
+
+.unit-frame .no-image {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* ---------- 3.9 メッセージバナー ---------- */
+.msg {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  margin-bottom: var(--space-4);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.msg.ok {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+}
+
+.msg.err {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+/* ---------- 3.10 タブ ---------- */
+.tab-row {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: var(--space-2) var(--space-4);
+  margin-bottom: -1px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab-btn:hover:not(:disabled) {
+  background: none;
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  color: var(--accent-cyan);
+  border-bottom-color: var(--accent-cyan);
+}
+
+/* ---------- 3.11 フォーム行 ----------
+ * 「select + select + 実行ボタン」のような操作行。 */
+.action-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.field-label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-bottom: var(--space-1);
+}
+
+select.input-field {
+  width: auto;
+  min-width: 140px;
+}
+
 /* ---------- 4. レスポンシブ用ユーティリティ ---------- */
 
 /* 2カラム → 狭い画面で1カラム。

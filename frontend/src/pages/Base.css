@@ -20,11 +20,7 @@
   flex-wrap: wrap;
   gap: var(--space-4);
 }
-.base-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: var(--space-2);
-}
+/* .base-title は page-title（index.css）へ統合済み */
 
 .chip-row {
   display: flex;
@@ -96,7 +92,7 @@
 }
 
 .facility-card {
-  background: var(--panel-bg);
+  background: var(--panel-inset);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
@@ -177,7 +173,7 @@
 .base-form-container {
   max-width: 400px;
   margin: 2rem auto;
-  background: var(--panel-bg);
+  background: var(--panel-inset);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-5);

@@ -337,7 +337,8 @@ export const MyPage: React.FC = () => {
          * （どのページからでも触れる必要があるため）。ここに残すのはこの画面固有の操作だけ。 */}
         <div className="page-head">
           <div>
-            <h1 className="cyber-title" style={{ fontSize: '1.5rem', textAlign: 'left', marginBottom: 0 }}>
+            <div className="page-eyebrow">Pilot Status</div>
+            <h1 className="page-title">
               {user.handle_name}【{user.rank || '-'}】
             </h1>
             {(user as any).faction_notice && (
@@ -371,25 +372,21 @@ export const MyPage: React.FC = () => {
             </div>
         )}
 
-        {sysMsg && (
-          <div style={{ background: 'rgba(72, 187, 120, 0.2)', color: '#48bb78', padding: '10px', borderRadius: '4px', marginBottom: '1rem', border: '1px solid #48bb78', textAlign: 'center' }}>
-            {sysMsg}
-          </div>
-        )}
+        {sysMsg && <div className="msg ok">{sysMsg}</div>}
 
         {/* PARTICIPANTS */}
-        <div style={{ background: 'rgba(0,0,0,0.4)', padding: '10px', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.85rem' }}>
-          <div style={{ color: '#aaa', marginBottom: '5px' }}>参戦者リスト (直近ログイン/戦闘)</div>
+        <div style={{ background: 'var(--panel-inset)', border: '1px solid var(--border-color)', padding: '10px', borderRadius: 'var(--radius)', marginBottom: '1rem', fontSize: '0.85rem' }}>
+          <div style={{ color: 'var(--text-muted)', marginBottom: '5px' }}>参戦者リスト (直近ログイン/戦闘)</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {participants.length > 0 ? participants.map((p, i) => (
-              <span key={i} 
+              <span key={i}
                 onClick={() => navigate(`/profile/${p.id}`)}
-                style={{ color: p.faction_color || '#4bc8ff', background: 'rgba(75, 200, 255, 0.1)', padding: '2px 6px', borderRadius: '3px', cursor: 'pointer' }}
+                style={{ color: p.faction_color || 'var(--accent-cyan)', background: 'rgba(75, 200, 255, 0.1)', padding: '2px 6px', borderRadius: '3px', cursor: 'pointer' }}
                 title="プロフィールを見る"
               >
-                {p.handle_name} <span style={{ color: '#888' }}>({p.unit_name})</span>
+                {p.handle_name} <span style={{ color: 'var(--text-muted)' }}>({p.unit_name})</span>
               </span>
-            )) : <span style={{ color: '#888' }}>該当なし</span>}
+            )) : <span style={{ color: 'var(--text-muted)' }}>該当なし</span>}
           </div>
         </div>
 
@@ -430,30 +427,30 @@ export const MyPage: React.FC = () => {
 
             {/* UNIT DETAILS */}
             <div className="stats-allocation" style={{ margin: 0, flex: 1 }}>
-              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#aaa', fontSize: '0.9rem', textAlign: 'center' }}>搭乗機体データ</h3>
+              <h3 className="sec-title">搭乗機体データ</h3>
               
               <div className="row-wrap" style={{ gap: '20px' }}>
                 {/* Unit Image & Actions */}
                 <div style={{ width: '120px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ width: '120px', height: '120px', background: 'rgba(0,0,0,0.5)', border: '1px solid #444', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  <div className="unit-frame md">
                     {user.unit_image ? (
-                      <UnitImage file={user.unit_image} alt={user.unit_name || 'Unit'} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      <UnitImage file={user.unit_image} alt={user.unit_name || 'Unit'} />
                     ) : (
-                      <span style={{ color: '#888', fontSize: '0.8rem' }}>No Image</span>
+                      <span className="no-image">No Image</span>
                     )}
                   </div>
-                  <button onClick={handleRepair} className="submit-btn" style={{ padding: '8px', fontSize: '0.8rem', margin: 0, background: '#2c5282' }}>
-                    機体を整備<br/><span style={{ color: '#90cdf4' }}>（コストは階級・LP依存）</span>
+                  <button onClick={handleRepair} className="btn sm block" style={{ flexDirection: 'column' }}>
+                    機体を整備<span style={{ fontSize: '0.7rem', fontWeight: 400, color: 'var(--text-muted)' }}>（コストは階級・LP依存）</span>
                   </button>
                   {isChampion && (
-                    <button onClick={handleChampionRepair} className="submit-btn" style={{ padding: '8px', fontSize: '0.8rem', margin: 0, background: '#744210' }}>
-                      防衛データを整備<br/><span style={{ color: '#f6e05e' }}>（防衛耐久を回復・優勝/防衛データへ反映）</span>
+                    <button onClick={handleChampionRepair} className="btn sm warn block" style={{ flexDirection: 'column' }}>
+                      防衛データを整備<span style={{ fontSize: '0.7rem', fontWeight: 400 }}>（防衛耐久を回復・優勝/防衛データへ反映）</span>
                     </button>
                   )}
                   {transformTargets.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {transformTargets.map((t: any) => (
-                        <button key={t.transform_id} onClick={() => handleTransform(t.unit_id)} className="submit-btn" style={{ padding: '4px', fontSize: '0.75rem', margin: 0, background: '#d69e2e', color: '#fff' }}>
+                        <button key={t.transform_id} onClick={() => handleTransform(t.unit_id)} className="btn sm block">
                           変形({t.name})
                         </button>
                       ))}
@@ -557,7 +554,7 @@ export const MyPage: React.FC = () => {
           {/* RIGHT COLUMN: PILOT DATA */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div className="stats-allocation" style={{ margin: 0, flex: 1 }}>
-              <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#aaa', fontSize: '0.9rem', textAlign: 'center' }}>搭乗者能力</h3>
+              <h3 className="sec-title">搭乗者能力</h3>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                 <div>
@@ -616,10 +613,10 @@ export const MyPage: React.FC = () => {
 
           {/* TEAM MEMBERS（実データ: /api/squad） */}
           <div className="stats-allocation" style={{ margin: 0 }}>
-            <div style={{ borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ color: '#aaa', fontSize: '0.9rem', margin: 0 }}>チームメンバー（{squad.length}/4）</h3>
+            <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 className="sec-title" style={{ margin: 0 }}>チームメンバー（{squad.length}/4）</h3>
               {squad.length > 0 && (
-                <button onClick={handleTeamRepair} className="submit-btn" style={{ padding: '4px 8px', fontSize: '0.75rem', margin: 0, background: '#2c5282' }}>チームを整備</button>
+                <button onClick={handleTeamRepair} className="btn sm">チームを整備</button>
               )}
             </div>
             {squad.length === 0 ? (
@@ -642,12 +639,12 @@ export const MyPage: React.FC = () => {
 
           {/* COMBAT ACTIONS */}
           <div className="stats-allocation" style={{ margin: 0 }}>
-            <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#aaa', fontSize: '0.9rem', textAlign: 'center' }}>【 戦闘メニュー 】</h3>
+            <h3 className="sec-title">戦闘メニュー</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-              <button onClick={() => navigate('/battle')} className="submit-btn" style={{ padding: '12px 15px', margin: 0, fontSize: '1rem', fontWeight: 'bold', width: '100%' }}>出撃 (優勝戦・個別戦)</button>
-              <button onClick={() => navigate('/simulator')} className="submit-btn" style={{ padding: '8px 15px', margin: 0, fontSize: '0.8rem', background: '#2c5282', width: '100%' }}>シミュレーターへ移動</button>
+              <button onClick={() => navigate('/battle')} className="btn primary lg block">出撃 (優勝戦・個別戦)</button>
+              <button onClick={() => navigate('/simulator')} className="btn block">シミュレーターへ移動</button>
             </div>
-            <div style={{ marginTop: '10px', textAlign: 'center', fontSize: '0.8rem', color: '#888' }}>
+            <div style={{ marginTop: '10px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               ※シミュレーターは模擬戦専用です（戦績・報酬なし）
             </div>
           </div>

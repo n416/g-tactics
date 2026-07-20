@@ -82,19 +82,25 @@ export const Tactics: React.FC = () => {
   return (
     <div className="register-container">
       <div className="glass-panel" style={{ maxWidth: '600px', width: '100%' }}>
-        <h1 className="cyber-title" style={{ fontSize: '1.5rem', textAlign: 'center' }}>TACTICS CENTER</h1>
-        <p style={{ textAlign: 'center', color: '#888', marginBottom: '2rem' }}>【戦術設定】</p>
+        <div className="page-head">
+          <div>
+            <div className="page-eyebrow">Tactics Center</div>
+            <h1 className="page-title">戦術設定</h1>
+          </div>
+          <button type="button" onClick={() => navigate('/mypage')} className="btn sm">マイページへ</button>
+        </div>
 
-        {sysMsg && <div style={{ background: 'rgba(72,187,120,0.2)', color: '#48bb78', padding: '10px', borderRadius: '4px', marginBottom: '1rem', textAlign: 'center', border: '1px solid #48bb78' }}>{sysMsg}</div>}
-        {error && <div style={{ background: 'rgba(229,62,62,0.2)', color: '#fc8181', padding: '10px', borderRadius: '4px', marginBottom: '1rem', textAlign: 'center', border: '1px solid #fc8181' }}>{error}</div>}
+        {sysMsg && <div className="msg ok">{sysMsg}</div>}
+        {error && <div className="msg err">{error}</div>}
 
         <form onSubmit={handleSave}>
-          <div className="input-group" style={{ marginBottom: '1.5rem' }}>
-            <label>移動系</label>
-            <select 
-              value={tactics[0] || '0'} 
-              onChange={(e) => setMoveTactic(e.target.value)} 
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid #00f2fe', borderRadius: '4px' }}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h3 className="sec-title">移動系</h3>
+            <select
+              className="input-field"
+              value={tactics[0] || '0'}
+              onChange={(e) => setMoveTactic(e.target.value)}
+              style={{ width: '100%' }}
             >
               <option value="0">特になし</option>
               <option value="1">敵を足止めする</option>
@@ -102,7 +108,7 @@ export const Tactics: React.FC = () => {
               <option value="3">敵を補捉し移動</option>
               <option value="8">おまかせ（毎戦闘ランダム）</option>
             </select>
-            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#aaa', lineHeight: '1.5' }}>
+            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
               ・敵を足止めする： 命中減少 回避増加 攻撃減少 防御減少 敵：移動不可（移動力0.3倍）<br/>
               ・移動を意識する： 命中通常 回避通常 攻撃通常 防御通常<br/>
               ・敵を補捉し移動： 命中増加 回避減少 攻撃増加 防御増加（移動力0.5倍）<br/>
@@ -111,12 +117,13 @@ export const Tactics: React.FC = () => {
             </div>
           </div>
 
-          <div className="input-group" style={{ marginBottom: '2rem' }}>
-            <label>攻撃系</label>
-            <select 
-              value={tactics[1] || '4'} 
+          <div style={{ marginBottom: '2rem' }}>
+            <h3 className="sec-title">攻撃系</h3>
+            <select
+              className="input-field"
+              value={tactics[1] || '4'}
               onChange={(e) => setAtkTactic(e.target.value)}
-              style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid #00f2fe', borderRadius: '4px' }}
+              style={{ width: '100%' }}
             >
               <option value="0">特になし</option>
               <option value="4">攻撃重視</option>
@@ -125,7 +132,7 @@ export const Tactics: React.FC = () => {
               <option value="7">操縦重視</option>
               <option value="8">おまかせ（毎戦闘ランダム）</option>
             </select>
-            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#aaa', lineHeight: '1.5' }}>
+            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
               ・攻撃重視： 命中増加 回避減少 攻撃増加 防御減少 敵が操縦重視だと有利（特性「攻撃的」で強化）<br/>
               ・回避重視： 命中減少 回避増加 攻撃減少 防御増加 敵が攻撃重視だと有利（特性「逃げ腰」で強化）<br/>
               ・撹乱重視： 命中増加 回避増加 攻撃減少 防御減少 敵が回避重視だと有利（特性「イタズラ好き」で強化）<br/>
@@ -136,17 +143,14 @@ export const Tactics: React.FC = () => {
           </div>
 
           {isChampion && (
-            <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,0,0,0.2)', padding: '0.5rem', borderRadius: '4px' }}>
+            <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.5rem 0.8rem', borderRadius: 'var(--radius)' }}>
               <input type="checkbox" id="updateChampion" checked={updateChampion} onChange={(e) => setUpdateChampion(e.target.checked)} />
-              <label htmlFor="updateChampion" style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 'bold' }}>戦術変更時、優勝/防衛データへ反映する</label>
+              <label htmlFor="updateChampion" style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>戦術変更時、優勝/防衛データへ反映する</label>
             </div>
           )}
 
-          <button type="submit" className="submit-btn" style={{ width: '100%', background: '#4299e1', color: 'white', padding: '12px', fontSize: '1.1rem', marginBottom: '1rem' }}>
+          <button type="submit" className="btn primary lg block">
             戦術セット
-          </button>
-          <button type="button" onClick={() => navigate('/mypage')} className="submit-btn" style={{ width: '100%', background: '#4a5568', color: 'white', padding: '12px', fontSize: '1.1rem', margin: 0 }}>
-            マイページへ戻る
           </button>
         </form>
       </div>

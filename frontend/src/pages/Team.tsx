@@ -211,21 +211,24 @@ export const Team: React.FC = () => {
     }
   };
 
-  if (loading) return <div style={{ padding: '2rem', color: '#fff' }}>Loading...</div>;
+  if (loading) return <div className="register-container"><div style={{ padding: '2rem', color: 'var(--text-secondary)' }}>Loading...</div></div>;
 
   return (
-    <div className="team-container">
-      <div className="title-bar">チーム編成</div>
-      
-      {error && <div className="error-banner">{error}</div>}
-      {sysMsg && <div className="sys-banner">{sysMsg}</div>}
-
-      <div style={{ marginBottom: '1.5rem' }}>
-        <button onClick={() => navigate('/mypage')} className="btn">マイページへ戻る</button>
+    <div className="register-container">
+      <div className="glass-panel" style={{ maxWidth: '1000px', width: '100%' }}>
+      <div className="page-head">
+        <div>
+          <div className="page-eyebrow">Team Formation</div>
+          <h1 className="page-title">チーム編成</h1>
+        </div>
+        <button onClick={() => navigate('/mypage')} className="btn sm">マイページへ</button>
       </div>
 
+      {error && <div className="msg err">{error}</div>}
+      {sysMsg && <div className="msg ok">{sysMsg}</div>}
+
       {!user?.faction_id && (
-        <div className="error-banner">
+        <div className="msg err">
           勢力に所属していないため、チームを編成できません。<br/>
           まずは勢力に参加するか、新しく勢力を立ち上げてください。
         </div>
@@ -234,10 +237,10 @@ export const Team: React.FC = () => {
       {user?.faction_id && (
         <>
           <div className="section-panel">
-            <h2 className="section-title">現在のチームメンバー ({squad.length}/4)</h2>
+            <h2 className="sec-title">現在のチームメンバー ({squad.length}/4)</h2>
 
             <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.8rem', borderRadius: '6px', marginBottom: '1rem' }}>
-              <div style={{ fontWeight: 'bold', color: '#93c5fd' }}>あなた（リーダー）</div>
+              <div style={{ fontWeight: 'bold' }}>あなた（リーダー）</div>
               <TeamTacticSelector value={myTactic} onChange={t => handleTactic('self', t)} />
               <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.4rem', lineHeight: 1.5 }}>
                 行動で役割が決まります: 攻撃する=アタッカー（攻+回避-）／防禦する=ディフェンダー（対象への攻撃を阻む）／掩護する=サポーター（対象を掩護・戦闘中の援護）。<br/>
@@ -272,7 +275,7 @@ export const Team: React.FC = () => {
                         <div className="char-name">{w.name} <span className="char-level">Lv: {w.level}</span></div>
                         <div className="unit-name">機体: {w.unit_name}</div>
                         <div className="char-stats">HP: {w.hp} / EN: {w.en}</div>
-                        <div className="char-stats" style={{ color: '#ecc94b' }}>コスト: {w.cost || '?'}</div>
+                        <div className="char-stats">コスト: {w.cost || '?'}</div>
                         <div className="char-date">編成日時: {new Date(w.created_at).toLocaleString()}</div>
                       </div>
                     </div>
@@ -282,7 +285,7 @@ export const Team: React.FC = () => {
                     <div style={{ marginTop: '0.5rem' }}>
                       <button
                         onClick={() => handleRemove(w.id)}
-                        className="btn btn-danger"
+                        className="btn sm danger"
                       >
                         チームから外す
                       </button>
@@ -297,7 +300,7 @@ export const Team: React.FC = () => {
           </div>
 
           <div className="section-panel">
-            <h2 className="section-title green">編成可能な勢力メンバー</h2>
+            <h2 className="sec-title">編成可能な勢力メンバー</h2>
             <p className="section-desc">同じ勢力に所属しているプレイヤーをチームに勧誘できます。</p>
             
             {candidates.length === 0 ? (
@@ -317,12 +320,12 @@ export const Team: React.FC = () => {
                           <UnitImage file={c.unit_image} alt={c.unit_name} className="unit-image" />
                         </div>
                         <div className="char-info">
-                          <div className="char-name" style={{ color: '#e5e7eb' }}>
-                            {c.chara_name || c.handle_name} 
+                          <div className="char-name">
+                            {c.chara_name || c.handle_name}
                             <span className="char-level">Lv.{c.level}</span>
                           </div>
-                          <div className="unit-name" style={{ color: '#fbbf24' }}>{c.unit_name || '不明'}</div>
-                          <div className="char-stats" style={{ color: '#ecc94b', fontSize: '0.8rem' }}>
+                          <div className="unit-name">{c.unit_name || '不明'}</div>
+                          <div className="char-stats" style={{ fontSize: '0.8rem' }}>
                             コスト: {c.cost ?? '?'}
                             <b style={{ marginLeft: '0.5rem', color: isOverCost ? '#f56565' : '#4bff7d' }}>
                               {isOverCost ? '【ＮＡ】' : '【ＯＫ】'}
@@ -333,7 +336,7 @@ export const Team: React.FC = () => {
                       <button
                         onClick={() => handleRecruit(c.id)}
                         disabled={isRecruited || isFull || isOverCost}
-                        className={`btn ${isRecruited || isFull || isOverCost ? 'btn-disabled' : 'btn-primary'}`}
+                        className="btn sm primary"
                       >
                         {isRecruited ? '編成済み' : isOverCost ? 'コスト超過' : 'チームに加える'}
                       </button>
@@ -345,6 +348,7 @@ export const Team: React.FC = () => {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 };

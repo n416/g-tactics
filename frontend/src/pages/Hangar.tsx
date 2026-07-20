@@ -172,33 +172,27 @@ export const Hangar: React.FC = () => {
   return (
     <div className="register-container" style={{ padding: '2rem 1rem' }}>
       <div className="glass-panel" style={{ maxWidth: '900px', width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h1 className="cyber-title" style={{ fontSize: '1.5rem', marginBottom: 0 }}>HANGAR (格納庫)</h1>
-          <button onClick={() => navigate('/mypage')} className="text-btn">マイページに戻る</button>
+        <div className="page-head">
+          <div>
+            <div className="page-eyebrow">Hangar</div>
+            <h1 className="page-title">格納庫</h1>
+          </div>
+          <button onClick={() => navigate('/mypage')} className="btn sm">マイページへ</button>
         </div>
 
-        {error && <div className="error-message" style={{marginBottom: '1rem'}}>{error}</div>}
-        {message && (
-          <div style={{ background: 'rgba(72, 187, 120, 0.2)', color: '#48bb78', padding: '10px', borderRadius: '4px', marginBottom: '1rem', border: '1px solid #48bb78', textAlign: 'center' }}>
-            {message}
-          </div>
-        )}
+        {error && <div className="msg err">{error}</div>}
+        {message && <div className="msg ok">{message}</div>}
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem', background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '4px' }}>
-          <span style={{ color: '#aaa', alignSelf: 'center', fontSize: '0.85rem' }}>SORT:</span>
+        <div className="chip-row" style={{ marginBottom: '1rem', background: 'var(--panel-inset)', padding: '0.5rem 0.8rem', borderRadius: 'var(--radius)' }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>並び替え:</span>
           {(['name', 'price', 'unit_lv', 'hp', 'en', 'armor', 'mobility', 'sensor', 'max_weight'] as (keyof HangarUnit)[]).map((key) => {
             const labels: any = { name: '機体名', price: 'コスト', unit_lv: '機体Lv', hp: '耐久', en: 'EN', armor: '装甲', mobility: '運動', sensor: '索敵', max_weight: '装備重量' };
             const isActive = sortConfig?.key === key;
             return (
-              <button 
-                key={key} 
+              <button
+                key={key}
                 onClick={() => handleSort(key)}
-                style={{ 
-                  background: isActive ? 'rgba(79, 172, 254, 0.2)' : 'transparent',
-                  border: isActive ? '1px solid #4facfe' : '1px solid #444',
-                  color: isActive ? '#4facfe' : '#aaa',
-                  padding: '2px 8px', fontSize: '0.8rem', borderRadius: '4px', cursor: 'pointer'
-                }}
+                className={`btn sm ${isActive ? 'primary' : ''}`}
               >
                 {labels[key]} {isActive ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
               </button>
@@ -209,7 +203,7 @@ export const Hangar: React.FC = () => {
         {isChampion && (
           <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <input type="checkbox" id="updateChampion" checked={updateChampion} onChange={(e) => setUpdateChampion(e.target.checked)} />
-            <label htmlFor="updateChampion" style={{ color: '#fff', fontSize: '0.9rem' }}>乗換時、優勝/防衛データへ反映する</label>
+            <label htmlFor="updateChampion" style={{ fontSize: '0.9rem' }}>乗換時、優勝/防衛データへ反映する</label>
           </div>
         )}
 
@@ -218,53 +212,34 @@ export const Hangar: React.FC = () => {
             const isEquipped = unit.unit_id === currentUnitId;
             const needsSeibi = unit.current_hp !== -1 && (unit.current_hp < unit.hp || unit.current_en < unit.en); // Simplified check vs base stats
             return (
-              <div key={unit.hangar_id} style={{ 
-                background: 'rgba(0,0,0,0.5)', 
-                border: isEquipped ? '2px solid #4facfe' : '1px solid rgba(255,255,255,0.2)', 
-                padding: '1rem', 
-                borderRadius: '8px',
+              <div key={unit.hangar_id} className="inset-panel" style={{
+                borderColor: isEquipped ? 'var(--accent-color)' : undefined,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '1rem'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ fontSize: '1.3rem', color: isEquipped ? '#4facfe' : '#fff', fontWeight: 'bold' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                    <div style={{ fontSize: '1.15rem', color: isEquipped ? 'var(--accent-cyan)' : 'var(--text-primary)', fontWeight: 'bold' }}>
                       {unit.name}
                     </div>
-                    {isEquipped && <span style={{ background: '#4facfe', color: '#000', padding: '0.2rem 0.5rem', fontSize: '0.8rem', borderRadius: '4px', fontWeight: 'bold' }}>搭乗中</span>}
+                    {isEquipped && <span style={{ background: 'var(--accent-color)', color: '#fff', padding: '0.15rem 0.5rem', fontSize: '0.75rem', borderRadius: 'var(--radius)', fontWeight: 'bold' }}>搭乗中</span>}
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     {needsSeibi && (
-                      <button 
-                        onClick={() => handleSeibi(unit.hangar_id)}
-                        className="submit-btn"
-                        style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', width: 'auto', background: 'transparent', border: '1px solid #4bff7d', color: '#4bff7d' }}
-                      >
+                      <button onClick={() => handleSeibi(unit.hangar_id)} className="btn sm">
                         整備
                       </button>
                     )}
                     {!isEquipped && (
                       <>
-                        <button 
-                          onClick={() => handleEquip(unit)}
-                          className="submit-btn"
-                          style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', width: 'auto', background: 'transparent', border: '1px solid #fff' }}
-                        >
+                        <button onClick={() => handleEquip(unit)} className="btn sm primary">
                           乗り換え
                         </button>
-                        <button 
-                          onClick={() => navigate('/trade', { state: { tab: 'sell', hangarId: unit.hangar_id } })}
-                          className="submit-btn"
-                          style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', width: 'auto', background: 'transparent', border: '1px solid #ffaa00', color: '#ffaa00' }}
-                        >
+                        <button onClick={() => navigate('/trade', { state: { tab: 'sell', hangarId: unit.hangar_id } })} className="btn sm warn">
                           出品
                         </button>
-                        <button 
-                          onClick={() => setDiscardConfirmModal({ isOpen: true, hangarId: unit.hangar_id, unitName: unit.name })}
-                          className="submit-btn"
-                          style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', width: 'auto', background: 'transparent', border: '1px solid #ff4b4b', color: '#ff4b4b' }}
-                        >
+                        <button onClick={() => setDiscardConfirmModal({ isOpen: true, hangarId: unit.hangar_id, unitName: unit.name })} className="btn sm danger">
                           廃棄
                         </button>
                       </>
@@ -272,26 +247,28 @@ export const Hangar: React.FC = () => {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: '250px' }}>
+                <div className="row-wrap" style={{ gap: '1rem' }}>
+                    <div style={{ flex: 1, minWidth: '250px', display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                         {unit.image && (
-                            <UnitImage file={unit.image} alt={unit.name} style={{ width: '100%', height: 'auto', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)', marginBottom: '1rem' }} />
+                            <div className="unit-frame lg">
+                              <UnitImage file={unit.image} alt={unit.name} />
+                            </div>
                         )}
-                        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '4px', fontSize: '0.9rem', lineHeight: '1.6', color: '#ddd', fontStyle: 'italic' }}>
+                        <div style={{ flex: 1, minWidth: '160px', background: 'rgba(0,0,0,0.25)', padding: '0.8rem', borderRadius: 'var(--radius)', fontSize: '0.85rem', lineHeight: '1.6', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                             {unit.description || '機体の解説はありません。'}
                         </div>
                     </div>
                     <div style={{ flex: 1, minWidth: '200px' }}>
                         <div className="stats-grid" style={{ gap: '0.5rem' }}>
-                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>耐久力 (HP)</label><div style={{ color: '#fff' }}>{unit.hp}</div></div>
-                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>エネルギー (EN)</label><div style={{ color: '#fff' }}>{unit.en}</div></div>
-                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>装甲 (AR)</label><div style={{ color: '#fff' }}>{unit.armor}</div></div>
-                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>運動 (MO)</label><div style={{ color: '#fff' }}>{unit.mobility}</div></div>
-                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>索敵 (SE)</label><div style={{ color: '#fff' }}>{unit.sensor}</div></div>
-                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>コスト</label><div style={{ color: '#fff' }}>{unit.price}</div></div>
-                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>機体Lv</label><div style={{ color: '#fff' }}>{unit.unit_lv}</div></div>
-                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>機熟</label><div style={{ color: '#fff' }}>{unit.kaisyo ?? 0}</div></div>
-                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>重量</label><div style={{ color: '#fff' }}>{unit.max_weight}</div></div>
+                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>耐久力 (HP)</label><div>{unit.hp}</div></div>
+                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>エネルギー (EN)</label><div>{unit.en}</div></div>
+                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>装甲 (AR)</label><div>{unit.armor}</div></div>
+                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>運動 (MO)</label><div>{unit.mobility}</div></div>
+                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>索敵 (SE)</label><div>{unit.sensor}</div></div>
+                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>コスト</label><div>{unit.price}</div></div>
+                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>機体Lv</label><div>{unit.unit_lv}</div></div>
+                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>機熟</label><div>{unit.kaisyo ?? 0}</div></div>
+                            <div className="stat-row" style={{ padding: '0.3rem' }}><label>重量</label><div>{unit.max_weight}</div></div>
                         </div>
                     </div>
                 </div>
@@ -299,7 +276,7 @@ export const Hangar: React.FC = () => {
             );
           })}
           {units.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#aaa' }}>
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
               格納庫に機体がありません。
             </div>
           )}

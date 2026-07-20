@@ -338,13 +338,12 @@
   overflow: hidden;
 }
 
+/* ユニット画像は png の一枚絵になったので、拡大もピクセル補間停止もしない。
+ * 枠いっぱいに収める（見切れさせない）。 */
 .roulette-img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  /* 素材が往年のCGIゲームの小さい GIF なので、補間せず拡大したほうが潰れない */
-  image-rendering: pixelated;
-  transform: scale(1.6);
 }
 
 .roulette-frame.spinning .roulette-img {
@@ -386,15 +385,19 @@
 }
 
 .roulette-btn {
-  background: var(--warning);
-  color: #1a1a1a;
-  border: none;
+  background: rgba(236, 201, 75, 0.08);
+  color: var(--warning);
+  border: 1px solid rgba(236, 201, 75, 0.5);
+  border-radius: var(--radius);
   font-weight: 700;
   padding: var(--space-3);
   font-size: 0.9rem;
 }
 
-.roulette-btn:hover:not(:disabled) { background: #f6d55c; }
+.roulette-btn:hover:not(:disabled) {
+  background: rgba(236, 201, 75, 0.18);
+  border-color: var(--warning);
+}
 
 .roulette-btn:disabled {
   background: var(--border-color);
@@ -481,7 +484,8 @@
   border: 1px solid var(--border-color);
 }
 
-.stats-allocation h3 {
+/* sec-title（index.css）を使う見出しには下罫線を重ねない */
+.stats-allocation h3:not(.sec-title) {
   font-size: 1.1rem;
   margin-bottom: 1rem;
   color: var(--text-primary);

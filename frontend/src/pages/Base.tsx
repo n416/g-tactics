@@ -197,9 +197,12 @@ export const Base: React.FC = () => {
   if (!baseInfo) {
     return (
       <div className="register-container">
-        <div className="base-container">
+        <div className="glass-panel base-container">
           <div className="page-head">
-            <div className="base-title">基地設立</div>
+            <div>
+              <div className="page-eyebrow">Base</div>
+              <h1 className="page-title">基地設立</h1>
+            </div>
           </div>
           <div className="base-form-container">
             <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
@@ -229,7 +232,7 @@ export const Base: React.FC = () => {
                 <option value={5}>仮想空間</option>
               </select>
             </div>
-            <button className="submit-btn" style={{ width: '100%' }} onClick={handleCreate}>
+            <button className="btn primary lg block" onClick={handleCreate}>
               設立する
             </button>
           </div>
@@ -267,10 +270,11 @@ export const Base: React.FC = () => {
 
   return (
     <div className="register-container">
-      <div className="base-container">
+      <div className="glass-panel base-container">
         <div className="page-head">
           <div>
-            <div className="base-title">{baseInfo.name}</div>
+            <div className="page-eyebrow">Base</div>
+            <h1 className="page-title" style={{ marginBottom: 'var(--space-2)' }}>{baseInfo.name}</h1>
             <div className="chip-row">
               <span className="chip cyan" onClick={() => { setChangeTerrainId(baseInfo.terrain); setTerrainModal(true); }} style={{ cursor: 'pointer' }} title="地形を変更する (5000pt)">
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }}></span>
@@ -306,7 +310,7 @@ export const Base: React.FC = () => {
                     <div className="status-desc">
                       1件の襲撃がありました（{defenseSummary.winCount}勝 {defenseSummary.loseCount}敗）
                       {defenseSummary.latestHasReplay && (
-                        <button className="submit-btn" style={{ marginLeft: '1rem', padding: '4px 12px', fontSize: '0.8rem' }} onClick={(e) => { e.stopPropagation(); navigate(`/replay/${defenseSummary.latestLogId}`); }}>
+                        <button className="btn sm primary" style={{ marginLeft: '1rem' }} onClick={(e) => { e.stopPropagation(); navigate(`/replay/${defenseSummary.latestLogId}`); }}>
                           リプレイを見る
                         </button>
                       )}
@@ -317,7 +321,7 @@ export const Base: React.FC = () => {
                     <div className="status-title blink">DEFENSE ALERT</div>
                     <div className="status-desc">
                       複数件の襲撃がありました（{defenseSummary.winCount}勝 {defenseSummary.loseCount}敗）
-                      <button className="submit-btn" style={{ marginLeft: '1rem', padding: '4px 12px', fontSize: '0.8rem' }} onClick={(e) => { e.stopPropagation(); navigate('/log'); }}>
+                      <button className="btn sm primary" style={{ marginLeft: '1rem' }} onClick={(e) => { e.stopPropagation(); navigate('/log'); }}>
                         個別戦履歴を見る
                       </button>
                     </div>
@@ -341,7 +345,7 @@ export const Base: React.FC = () => {
           </div>
         </div>
 
-        <h2 style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', paddingBottom: 'var(--space-2)' }}>基地施設</h2>
+        <h2 className="sec-title" style={{ marginBottom: 0 }}>基地施設</h2>
         
         <div className="facility-grid">
           {/* Power Plant */}
@@ -415,10 +419,10 @@ export const Base: React.FC = () => {
           </div>
         </div>
 
-        <h2 style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', paddingBottom: 'var(--space-2)', marginTop: 'var(--space-4)' }}>機体博物館</h2>
-        <div className="museum-placeholder" onClick={() => navigate('/museum')} style={{ cursor: 'pointer', textAlign: 'center', padding: '2rem', background: 'var(--bg-raised)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius)' }}>
-          <div style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>展示ホール、図鑑、殿堂の設定はこちらから</div>
-          <button className="submit-btn" style={{ padding: '0.5rem 2rem' }}>博物館へ入館</button>
+        <h2 className="sec-title" style={{ marginTop: 'var(--space-4)', marginBottom: 0 }}>機体博物館</h2>
+        <div className="museum-placeholder" onClick={() => navigate('/museum')} style={{ cursor: 'pointer', padding: '2rem' }}>
+          <div style={{ color: 'var(--text-primary)' }}>展示ホール、図鑑、殿堂の設定はこちらから</div>
+          <button className="btn primary">博物館へ入館</button>
         </div>
       </div>
 

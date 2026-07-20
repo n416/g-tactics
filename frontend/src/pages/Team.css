@@ -1,97 +1,13 @@
-.team-container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 2rem;
-  color: var(--text-primary);
-}
-
-.title-bar {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.5rem;
-}
-
-.btn {
-  background: var(--panel-bg);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
-}
-
-.btn:hover {
-  background: var(--border-color);
-}
-
-.btn-primary {
-  background: rgba(34, 197, 94, 0.2);
-  border-color: rgba(34, 197, 94, 0.4);
-  color: #4ade80;
-}
-
-.btn-primary:hover {
-  background: rgba(34, 197, 94, 0.3);
-}
-
-.btn-danger {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.4);
-  color: #f87171;
-}
-
-.btn-danger:hover {
-  background: rgba(239, 68, 68, 0.3);
-}
-
-.btn-disabled {
-  background: var(--bg-color);
-  color: var(--text-secondary);
-  border-color: var(--border-color);
-  cursor: not-allowed;
-}
-
-.error-banner {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #f87171;
-  padding: 1rem;
-  border-radius: var(--radius);
-  margin-bottom: 1.5rem;
-}
-
-.sys-banner {
-  background: rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  color: #38bdf8;
-  padding: 1rem;
-  border-radius: var(--radius);
-  margin-bottom: 1.5rem;
-}
+/* ボタン・バナー・見出しは index.css の共通プリミティブ
+ * （.btn / .msg / .sec-title）を使う。ここにはこのページ固有の
+ * カード類だけを残す。 */
 
 .section-panel {
-  background: var(--panel-bg);
+  background: var(--panel-inset);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
-  margin-top: 2rem;
-}
-
-.section-title {
-  font-size: 1.25rem;
-  color: #fbbf24;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.5rem;
-}
-
-.section-title.green {
-  color: #4ade80;
+  margin-top: 1.5rem;
 }
 
 .section-desc {
@@ -132,11 +48,14 @@
   align-items: center;
 }
 
+/* unit-frame（index.css）と同じ見た目に揃える */
 .unit-image-wrapper {
   width: 60px;
   height: 60px;
-  background: #000;
+  background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -150,9 +69,9 @@
 }
 
 .char-info .char-name {
-  color: #93c5fd;
+  color: var(--text-primary);
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   margin-bottom: 0.25rem;
 }
 
@@ -163,12 +82,12 @@
 }
 
 .char-info .unit-name {
-  color: #fef08a;
+  color: var(--success);
   font-size: 0.9rem;
 }
 
 .char-info .char-stats {
-  color: #86efac;
+  color: var(--text-secondary);
   font-size: 0.85rem;
   margin-top: 0.25rem;
 }

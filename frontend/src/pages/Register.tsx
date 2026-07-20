@@ -295,8 +295,10 @@ export const Register: React.FC = () => {
   return (
     <div className="auth-container">
       <div className="glass-panel" style={{ maxWidth: '860px' }}>
-        <h1 className="cyber-title">CHARACTER CREATION</h1>
-        <p className="subtitle">G-Tactics</p>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <div className="page-eyebrow">Character Creation</div>
+          <h1 className="page-title">パイロット登録</h1>
+        </div>
 
         {error && <div className="error-message">{error}</div>}
         {successMsg && <div className="success-message">{successMsg}</div>}

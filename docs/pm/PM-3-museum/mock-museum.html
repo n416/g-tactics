@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G-Tactics 機体博物館 UIモック</title>
+<style>
+  :root {
+    --bg-color: #0f172a;
+    --bg-raised: #16213a;
+    --panel-bg: #1e293b;
+    --panel-inset: rgba(0, 0, 0, 0.25);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border-color: #334155;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --accent-color: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-cyan: #4facfe;
+    --success: #4bff7d;
+    --warning: #ecc94b;
+    --danger: #ef4444;
+    --radius: 4px;
+    --radius-lg: 8px;
+    --museum-gold: #d8b25a;
+    --museum-gold-dim: rgba(216, 178, 90, 0.35);
+    --hall-bg: #0a0f1f;
+    --serif: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", Georgia, serif;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-primary);
+  }
+  * { box-sizing: border-box; }
+  
+  .mock-header {
+    background: #000;
+    padding: 1rem;
+    text-align: center;
+    border-bottom: 2px solid var(--museum-gold);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .mock-header h1 { margin: 0; font-size: 1.2rem; color: var(--museum-gold); }
+  .mock-header nav { margin-top: 0.5rem; display: flex; gap: 1rem; justify-content: center; }
+  .mock-header nav a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; }
+  .mock-header nav a:hover { color: var(--text-primary); }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .section-title {
+    font-family: var(--serif);
+    color: var(--accent-cyan);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* 共通UI部品 */
+  .btn {
+    background: var(--panel-bg); border: 1px solid var(--border-color); color: var(--text-primary);
+    padding: 0.4rem 1rem; border-radius: var(--radius); cursor: pointer; font-size: 0.85rem;
+  }
+  .btn.primary { background: var(--accent-color); border-color: var(--accent-hover); }
+  .btn.gold { background: rgba(216, 178, 90, 0.1); border-color: var(--museum-gold); color: var(--museum-gold); }
+  
+  /* ---------- 1. 博物館ホール ---------- */
+  .hall {
+    background: radial-gradient(ellipse 120% 60% at 50% -10%, rgba(216, 178, 90, 0.07), transparent 60%), var(--hall-bg);
+    border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+    padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;
+  }
+  .hall-head {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;
+  }
+  .hall-head h2 { font-family: var(--serif); font-size: 1.45rem; margin: 0; color: var(--museum-gold); letter-spacing: 0.12em; }
+  .hall-head .collection { margin-left: auto; min-width: 200px; }
+  .col-label { font-size: 0.75rem; color: var(--text-secondary); display: flex; justify-content: space-between; }
+  .col-label strong { color: var(--text-primary); }
+  .col-bar { height: 5px; background: var(--panel-inset); border-radius: 999px; overflow: hidden; margin-top: 0.3rem;}
+  .col-bar span { display: block; height: 100%; width: 3.7%; background: linear-gradient(90deg, var(--museum-gold), #f0d79a); }
+
+  /* 殿堂 */
+  .featured {
+    display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: stretch;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.25rem;
+    position: relative;
+  }
+  .featured .edit-btn { position: absolute; top: 1rem; right: 1rem; }
+  .stage {
+    flex: 0 0 260px; min-height: 250px; position: relative;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .stage .spotlight { position: absolute; inset: 0; background: radial-gradient(ellipse 55% 75% at 50% 20%, rgba(216, 178, 90, 0.18), transparent 70%); }
+  .stage .placeholder-img {
+    width: 180px; height: 200px; background: rgba(0,0,0,0.4); border: 1px dashed var(--text-muted);
+    display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.8rem; z-index: 1; margin-bottom: 10px;
+  }
+  .stage .pedestal { position: absolute; bottom: 0; width: 78%; height: 22px; background: linear-gradient(180deg, #2a3550, #131b30); border: 1px solid var(--border-color); border-radius: 3px 3px 6px 6px; }
+  .plaque-main { flex: 1 1 300px; display: flex; flex-direction: column; gap: 0.7rem; justify-content: center; }
+  .exhibit-tag { font-size: 0.68rem; letter-spacing: 0.28em; color: var(--museum-gold); text-transform: uppercase; }
+  .plaque-main h3 { font-family: var(--serif); font-size: 1.6rem; margin: 0; }
+  .plaque-main h3 small { display: block; font-size: 0.85rem; color: var(--text-muted); }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 0.6rem 1.5rem; }
+  .stat { display: flex; flex-direction: column; gap: 0.1rem; }
+  .stat .k { font-size: 0.68rem; color: var(--text-muted); }
+  .stat .v { font-size: 1.05rem; font-weight: 700; }
+  .stat .v.gold { color: var(--museum-gold); }
+  .owner-note { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; border-left: 2px solid var(--museum-gold-dim); padding-left: 0.8rem; }
+
+  /* グリッド */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 1rem; }
+  .gallery-head { display: flex; justify-content: space-between; align-items: center; }
+  .exhibit {
+    position: relative; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 55%);
+    border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1rem 0.75rem 0;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .exhibit .light { position: absolute; inset: 0 0 auto 0; height: 65%; background: radial-gradient(ellipse 60% 90% at 50% 0%, rgba(216, 178, 90, 0.12), transparent 70%); }
+  .exhibit .body { flex: 1; display: flex; align-items: flex-end; justify-content: center; min-height: 120px; padding-bottom: 10px; }
+  .exhibit .body .placeholder-img { width: 100px; height: 100px; background: rgba(0,0,0,0.3); border: 1px dashed var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: var(--text-muted); }
+  .base-slab { height: 10px; background: linear-gradient(180deg, #26304a, #131b30); border-top: 1px solid var(--border-color); margin: 0 -0.75rem; }
+  .plaque { background: #10182c; margin: 0 -0.75rem; padding: 0.6rem 0.8rem; border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; }
+  .plaque .model { font-size: 0.64rem; color: var(--text-muted); }
+  .plaque .name { font-family: var(--serif); font-size: 0.95rem; font-weight: 600; }
+  .plaque .meta { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.2rem;}
+  .plaque .meta .count { color: var(--museum-gold); }
+
+  .exhibit.empty { border-style: dashed; border-color: var(--border-color); background: none; }
+  .exhibit.empty .q { font-family: var(--serif); font-size: 2.4rem; color: var(--text-muted); opacity: 0.5; margin: auto; }
+  
+  .exhibit.locked { border-color: #1e293b; opacity: 0.6; }
+  .exhibit.locked .q { font-size: 1.5rem; }
+
+  /* 見学者ノート */
+  .guestbook { border-top: 1px solid var(--border-subtle); padding-top: 1.1rem; }
+  .guestbook h4 { font-size: 0.78rem; color: var(--text-muted); margin: 0 0 0.5rem 0; }
+  .guest { font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 0.6rem; align-items: baseline; margin-bottom: 0.3rem;}
+  .guest .g-name { color: var(--accent-cyan); }
+  .guest .g-date { color: var(--text-muted); font-size: 0.7rem; margin-left: auto; }
+
+  /* ---------- 2. 展示編集モード ---------- */
+  .edit-mode { background: var(--bg-raised); border: 1px solid var(--accent-cyan); border-radius: var(--radius-lg); padding: 1.5rem; }
+  .edit-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem; }
+  .inventory { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 1rem; }
+  .inv-item {
+    min-width: 100px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: var(--radius);
+    padding: 0.5rem; text-align: center; cursor: pointer;
+  }
+  .inv-item:hover { border-color: var(--accent-cyan); }
+  .inv-item .img-ph { width: 60px; height: 60px; background: #000; margin: 0 auto 0.5rem; display: flex; align-items:center; justify-content: center; font-size: 0.6rem; }
+  .inv-item .name { font-size: 0.75rem; }
+  .edit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; opacity: 0.9; }
+  .edit-exhibit { border: 2px dashed var(--accent-cyan); border-radius: var(--radius); padding: 1rem; text-align: center; background: rgba(79, 172, 254, 0.05); cursor: pointer; }
+  .edit-exhibit.filled { border-style: solid; border-color: var(--border-color); background: var(--panel-bg); }
+
+  /* ---------- 3. 館長コメント編集 ---------- */
+  .comment-edit { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; display: flex; gap: 2rem; }
+  .comment-form { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+  .comment-form textarea { width: 100%; height: 100px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem; border-radius: var(--radius); resize: vertical; }
+  .comment-form .char-count { font-size: 0.75rem; color: var(--text-muted); text-align: right; }
+  
+  /* ---------- 4. 図鑑 (コレクション) ---------- */
+  .pokedex { background: var(--hall-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; }
+  .poke-filters { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+  .poke-filters input, .poke-filters select { background: var(--panel-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.4rem 0.8rem; border-radius: var(--radius); }
+  .poke-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; }
+  .poke-card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 0.8rem; text-align: center; }
+  .poke-card .img-ph { width: 80px; height: 80px; background: rgba(0,0,0,0.3); margin: 0 auto 0.5rem; }
+  .poke-card.uncollected { opacity: 0.5; filter: grayscale(1); }
+  .poke-card.uncollected .img-ph { background: #111; color: #444; font-size: 2rem; display: flex; align-items:center; justify-content: center; }
+  .poke-card .name { font-size: 0.8rem; font-weight: bold; margin-bottom: 0.3rem;}
+  .poke-card .stats { font-size: 0.65rem; color: var(--text-secondary); display: flex; justify-content: space-between;}
+</style>
+</head>
+<body>
+
+<header class="mock-header">
+  <h1>機体博物館 モックアップ画面一覧</h1>
+  <nav>
+    <a href="#hall">1. 博物館ホール</a>
+    <a href="#edit">2. 展示編集モード</a>
+    <a href="#comment">3. コメント編集</a>
+    <a href="#pokedex">4. 図鑑（コレクション）</a>
+  </nav>
+</header>
+
+<div class="page">
+
+  <!-- 1. 博物館ホール -->
+  <section id="hall">
+    <h2 class="section-title">1. 博物館ホール (閲覧ビュー)</h2>
+    <div class="hall">
+      <div class="hall-head">
+        <h2>機体博物館</h2>
+        <div class="collection">
+          <span class="col-label"><span>収蔵図鑑</span><span><strong>34</strong> / 911 機</span></span>
+          <div class="col-bar"><span></span></div>
+        </div>
+      </div>
+
+      <div class="featured">
+        <button class="btn gold edit-btn">殿堂を設定</button>
+        <div class="stage">
+          <div class="spotlight"></div>
+          <div class="placeholder-img">Image: サザビー</div>
+          <div class="pedestal"></div>
+        </div>
+        <div class="plaque-main">
+          <span class="exhibit-tag">殿堂展示 — 館長のお気に入り</span>
+          <h3><small>MSN-04</small>サザビー</h3>
+          <div class="stat-row">
+            <div class="stat"><span class="k">入手回数</span><span class="v gold">5</span></div>
+            <div class="stat"><span class="k">初入手</span><span class="v">2026.05.12</span></div>
+            <div class="stat"><span class="k">総撃墜</span><span class="v">41</span></div>
+            <div class="stat"><span class="k">最高連勝</span><span class="v">9</span></div>
+          </div>
+          <p class="owner-note">
+            初めて優勝戦を勝ち抜いたときの搭乗機。5回買い直してでも手元に置きたかった。<br>
+            <span style="color:var(--text-muted); font-size:0.72rem;">— アムロ・レイ (館長)</span>
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <div class="gallery-head">
+          <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0 0 1rem 0;">一般展示 (Lv 2: 枠数 4)</h3>
+          <button class="btn">展示を編集する</button>
+        </div>
+        <div class="gallery">
+          <div class="exhibit">
+            <div class="light"></div>
+            <div class="body"><div class="placeholder-img">ガンダム</div></div>
+            <div class="base-slab"></div>
+            <div class="plaque">
+              <span class="model">RX-78-2</span><span class="name">ガンダム</span>
+              <span class="meta"><span>撃墜 18</span><span class="count">入手 ×2</span></span>
+            </div>
+          </div>
+          <div class="exhibit">
+            <div class="light"></div>
+            <div class="body"><div class="placeholder-img">ザクII</div></div>
+            <div class="base-slab"></div>
+            <div class="plaque">
+              <span class="model">MS-06S</span><span class="name">シャア専用ザクII</span>
+              <span class="meta"><span>撃墜 27</span><span class="count">入手 ×4</span></span>
+            </div>
+          </div>
+          <div class="exhibit empty">
+            <div class="body"><span class="q">？</span></div>
+            <div class="base-slab"></div>
+            <div class="plaque">
+              <span class="model">— 未収蔵 —</span><span class="name">空き展示台</span>
+              <span class="meta"><span>機体を配置可能</span></span>
+            </div>
+          </div>
+          <div class="exhibit empty locked">
+            <div class="body"><span class="q">🔒</span></div>
+            <div class="base-slab"></div>
+            <div class="plaque">
+              <span class="model">— ロック —</span><span class="name">未解放</span>
+              <span class="meta"><span>博物館Lv3で解放</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guestbook">
+        <h4>見学者ノート (PM-4 モックプレースホルダー)</h4>
+        <div class="guest"><span class="g-name">アムロ</span><span>サザビー5回買うのは草。</span><span class="g-date">7/19 23:41</span></div>
+        <div class="guest"><span class="g-name">シャア</span><span>やるな。</span><span class="g-date">7/18 20:05</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 展示編集モード -->
+  <section id="edit">
+    <h2 class="section-title">2. 展示編集モード</h2>
+    <div class="edit-mode">
+      <div class="edit-header">
+        <h3 style="margin:0; color:var(--accent-cyan);">展示機体の配置</h3>
+        <div>
+          <button class="btn">キャンセル</button>
+          <button class="btn primary">変更を保存</button>
+        </div>
+      </div>
+      
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top:0;">1. 下の収蔵リストから機体を選んでください。</p>
+      <div class="inventory">
+        <div class="inv-item"><div class="img-ph">Z</div><div class="name">Ζガンダム</div></div>
+        <div class="inv-item"><div class="img-ph">ν</div><div class="name">νガンダム</div></div>
+        <div class="inv-item"><div class="img-ph">Zg</div><div class="name">ズゴック</div></div>
+        <div class="inv-item"><div class="img-ph">Ze</div><div class="name">ジオング</div></div>
+      </div>
+
+      <p style="font-size: 0.85rem; color: var(--text-secondary);">2. 配置する展示台をクリックしてください。</p>
+      <div class="edit-grid">
+        <div class="edit-exhibit filled">
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:5px;">枠 1</div>
+          <div style="font-size:0.85rem;">ガンダム</div>
+          <button class="btn" style="margin-top:10px; padding:0.2rem 0.5rem; font-size:0.7rem;">外す</button>
+        </div>
+        <div class="edit-exhibit filled">
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:5px;">枠 2</div>
+          <div style="font-size:0.85rem;">シャア専用ザクII</div>
+          <button class="btn" style="margin-top:10px; padding:0.2rem 0.5rem; font-size:0.7rem;">外す</button>
+        </div>
+        <div class="edit-exhibit">
+          <div style="font-size:0.75rem; color:var(--accent-cyan); margin-bottom:5px;">枠 3</div>
+          <div style="font-size:0.85rem; color:var(--text-muted);">空き</div>
+          <div style="font-size:0.7rem; color:var(--accent-cyan); margin-top:10px;">ここに配置</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 館長コメント編集 -->
+  <section id="comment">
+    <h2 class="section-title">3. 殿堂・館長コメント編集</h2>
+    <div class="comment-edit">
+      <div style="width: 150px; text-align:center;">
+        <div style="width:100px; height:100px; background:rgba(0,0,0,0.4); margin:0 auto 10px; display:flex; align-items:center; justify-content:center; border:1px solid var(--museum-gold);">サザビー</div>
+        <button class="btn" style="font-size:0.75rem;">殿堂機体を変更</button>
+      </div>
+      <div class="comment-form">
+        <div>
+          <label style="font-size:0.85rem; font-weight:bold; color:var(--museum-gold);">館長コメント</label>
+          <p style="font-size:0.75rem; color:var(--text-secondary); margin:0.2rem 0 0.5rem;">殿堂展示に添えるコメントを入力してください。見学者に公開されます。</p>
+        </div>
+        <textarea placeholder="機体への思い入れなどを記入...">初めて優勝戦を勝ち抜いたときの搭乗機。5回買い直してでも手元に置きたかった。</textarea>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="char-count">40 / 100 文字</span>
+          <button class="btn primary">保存する</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 図鑑 (コレクション) -->
+  <section id="pokedex">
+    <h2 class="section-title">4. 図鑑 (コレクション一覧)</h2>
+    <div class="pokedex">
+      <div class="poke-filters">
+        <input type="text" placeholder="機体名で検索..." style="flex:1; max-width:250px;">
+        <select>
+          <option>すべて表示</option>
+          <option>収蔵済み</option>
+          <option>未収蔵</option>
+        </select>
+        <select>
+          <option>図鑑番号順</option>
+          <option>入手回数順</option>
+          <option>総撃墜順</option>
+        </select>
+        <button class="btn" style="margin-left:auto;">博物館へ戻る</button>
+      </div>
+      
+      <div class="poke-grid">
+        <div class="poke-card">
+          <div class="img-ph"></div>
+          <div class="name">ガンダム</div>
+          <div class="stats"><span>撃墜 18</span><span>入手 2</span></div>
+        </div>
+        <div class="poke-card">
+          <div class="img-ph"></div>
+          <div class="name">シャア専用ザクII</div>
+          <div class="stats"><span>撃墜 27</span><span>入手 4</span></div>
+        </div>
+        <div class="poke-card uncollected">
+          <div class="img-ph">？</div>
+          <div class="name">???</div>
+          <div class="stats"><span>撃墜 0</span><span>未入手</span></div>
+        </div>
+        <div class="poke-card uncollected">
+          <div class="img-ph">？</div>
+          <div class="name">???</div>
+          <div class="stats"><span>撃墜 0</span><span>未入手</span></div>
+        </div>
+        <div class="poke-card">
+          <div class="img-ph"></div>
+          <div class="name">サザビー</div>
+          <div class="stats"><span>撃墜 41</span><span style="color:var(--museum-gold)">入手 5</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

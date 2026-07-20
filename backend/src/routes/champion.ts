@@ -284,8 +284,8 @@ championApp.post('/challenge/:type', async (c) => {
 
   // 伝言で詳細を送信（以前の長文ログを自分に送っていたバグを修正し、防衛者へ簡潔な結果を送る）
   const defenseResultMsg = win 
-    ? `【防衛戦敗北】あなたの防衛機体が${attacker.chara_name}に敗北し、優勝者の座を奪われました…。`
-    : `【防衛戦勝利】あなたの防衛機体が${attacker.chara_name}を撃退しました！`;
+    ? `【優勝戦敗北】あなたの防衛機体が${attacker.chara_name}に敗北し、優勝者の座を奪われました…。`
+    : `【優勝戦勝利】あなたの防衛機体が${attacker.chara_name}を撃退しました！`;
   await db.prepare(`INSERT INTO private_messages (sender_id, recipient_id, message) VALUES (?, ?, ?)`).bind(user.id, champion.champion_id, defenseResultMsg).run()
 
   return c.json({ success: true, message: resultMessage + '\n(詳細は伝言ボックスをご確認ください)', events, meta, logs, reward })

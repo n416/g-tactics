@@ -44,6 +44,12 @@ export const Profile: React.FC = () => {
   const [receivedMessages, setReceivedMessages] = useState<any[]>([]);
   const [showSendModal, setShowSendModal] = useState(false);
 
+  // Base Attack
+  const [showAttackModal, setShowAttackModal] = useState(false);
+  const [targetBase, setTargetBase] = useState<any>(null);
+  const [attackError, setAttackError] = useState('');
+  const [isAttacking, setIsAttacking] = useState(false);
+
   // Hangar
   const [showHangarModal, setShowHangarModal] = useState(false);
   const [hangarUnits, setHangarUnits] = useState<any[]>([]);
@@ -130,6 +136,49 @@ export const Profile: React.FC = () => {
     }
   };
 
+  const openAttackModal = async () => {
+    try {
+      const token = localStorage.getItem('gtactics_token');
+      const res = await fetch(`/api/base/user/${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json() as any;
+      if (data.success) {
+        setTargetBase(data);
+        setAttackError('');
+        setShowAttackModal(true);
+      } else {
+        showToast(data.message, 'error');
+      }
+    } catch (err) {
+      showToast('基地情報の取得に失敗しました', 'error');
+    }
+  };
+
+  const executeAttack = async () => {
+    setIsAttacking(true);
+    setAttackError('');
+    try {
+      const token = localStorage.getItem('gtactics_token');
+      const res = await fetch(`/api/base/attack/${id}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json() as any;
+      if (data.success) {
+        showToast(data.message, 'success');
+        setShowAttackModal(false);
+        navigate(`/replay/${data.battleLogId}`);
+      } else {
+        setAttackError(data.message);
+      }
+    } catch (err) {
+      setAttackError('通信エラーが発生しました');
+    } finally {
+      setIsAttacking(false);
+    }
+  };
+
   if (error && !profile) return <div className="register-container"><div className="error-message">{error}</div><button onClick={() => navigate('/ranking')} className="text-btn">BACK</button></div>;
   if (!profile) return <div className="register-container"><div style={{color: 'var(--accent-color)'}}>LOADING PROFILE...</div></div>;
 
@@ -143,7 +192,10 @@ export const Profile: React.FC = () => {
       <div className="glass-panel" style={{ maxWidth: '800px', width: '100%', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
           <h1 className="cyber-title" style={{ fontSize: '1.5rem', margin: 0 }}>PILOT PROFILE</h1>
-          <button onClick={() => navigate('/ranking')} className="text-btn">BACK</button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={() => navigate(`/museum/${id}`)} className="submit-btn" style={{ margin: 0, padding: '0.4rem 1rem' }}>基地訪問</button>
+            <button onClick={() => navigate('/ranking')} className="text-btn">BACK</button>
+          </div>
         </div>
         
         {error && <div className="error-message" style={{marginBottom: '1rem'}}>{error}</div>}
@@ -167,7 +219,7 @@ export const Profile: React.FC = () => {
                 <div><div style={{ fontSize: '0.8rem', color: '#888' }}>レベル</div><div>Lv.{profile.level}</div></div>
                 <div><div style={{ fontSize: '0.8rem', color: '#888' }}>経験値</div><div>{profile.exp}</div></div>
                 <div><div style={{ fontSize: '0.8rem', color: '#888' }}>名声</div><div>{profile.fame || 0}</div></div>
-                <div><div style={{ fontSize: '0.8rem', color: '#888' }}>所持金</div><div>{profile.money.toLocaleString()} G</div></div>
+                <div><div style={{ fontSize: '0.8rem', color: '#888' }}>所持金</div><div>{profile.money.toLocaleString()} pt</div></div>
               </div>
             </div>
 
@@ -254,8 +306,11 @@ export const Profile: React.FC = () => {
 
             {myId && myId !== id && (
               <div className="stats-allocation" style={{ margin: 0 }}>
-                <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#aaa', fontSize: '0.9rem' }}>伝言を送る (MES)</h3>
-                <button className="submit-btn" style={{ margin: 0 }} onClick={() => setShowSendModal(true)}>このキャラに伝言を送る</button>
+                <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#aaa', fontSize: '0.9rem' }}>アクション</h3>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button className="submit-btn" style={{ margin: 0, flex: 1 }} onClick={() => setShowSendModal(true)}>伝言を送る</button>
+                  <button className="submit-btn" style={{ margin: 0, flex: 1, background: 'var(--accent-color)', borderColor: 'var(--accent-color)' }} onClick={openAttackModal}>基地を襲撃</button>
+                </div>
               </div>
             )}
           </div>
@@ -308,6 +363,62 @@ export const Profile: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={showAttackModal}
+        onClose={() => setShowAttackModal(false)}
+        title="基地を襲撃する"
+        actions={
+          <>
+            <button className="text-btn" onClick={() => setShowAttackModal(false)}>キャンセル</button>
+            <button 
+              className="submit-btn" 
+              style={{ margin: 0, background: 'var(--accent-color)', borderColor: 'var(--accent-color)' }} 
+              disabled={isAttacking || (targetBase && !targetBase.canAttack)} 
+              onClick={executeAttack}
+            >
+              {isAttacking ? '出撃中...' : '出撃！'}
+            </button>
+          </>
+        }
+      >
+        {targetBase && (
+          <div style={{ color: 'var(--text-primary)' }}>
+            <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+              相手の基地に攻撃を仕掛け、未回収の資金を奪い取ります。（防衛施設により反撃を受ける場合があります）
+            </p>
+            <div style={{ background: 'var(--panel-inset)', padding: '1rem', borderRadius: '4px', marginBottom: '1rem' }}>
+              <div style={{ fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '0.5rem', color: '#4facfe' }}>{targetBase.base.name}</div>
+              <div style={{ fontSize: '0.9rem', color: '#aaa' }}>オーナー: {targetBase.chara_name}</div>
+              <div style={{ fontSize: '0.9rem', color: '#aaa' }}>地形: {['', '地上', '水中', '宇宙', '空中', '仮想空間'][targetBase.base.terrain]}</div>
+            </div>
+            <div style={{ background: 'var(--panel-inset)', padding: '1rem', borderRadius: '4px', marginBottom: '1rem' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#aaa' }}>防衛施設レベル予測</div>
+              <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem' }}>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{ color: '#aaa' }}>発電所</div>
+                  <div style={{ fontWeight: 'bold' }}>Lv {targetBase.facilities.power || 0}</div>
+                </div>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{ color: '#aaa' }}>砲台</div>
+                  <div style={{ fontWeight: 'bold' }}>Lv {targetBase.facilities.turret || 0}</div>
+                </div>
+              </div>
+            </div>
+            {!targetBase.canAttack && (
+              <div className="error-message" style={{ margin: 0, fontSize: '0.9rem' }}>
+                {targetBase.reason}
+                {targetBase.shieldRemainingSec > 0 && `（残り ${Math.floor(targetBase.shieldRemainingSec / 3600)}時間${Math.floor((targetBase.shieldRemainingSec % 3600) / 60)}分）`}
+              </div>
+            )}
+            {attackError && (
+              <div className="error-message" style={{ margin: '1rem 0 0 0', fontSize: '0.9rem' }}>
+                {attackError}
+              </div>
+            )}
           </div>
         )}
       </Modal>

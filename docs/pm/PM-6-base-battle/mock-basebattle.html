@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>基地戦 モックアップ</title>
+<style>
+:root {
+  --bg-color: #0f172a;
+  --bg-raised: #16213a;
+  --panel-bg: #1e293b;
+  --panel-inset: rgba(0, 0, 0, 0.25);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-color: #334155;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-cyan: #4facfe;
+  --success: #4bff7d;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --shield: #a855f7;
+  --radius: 4px;
+  --radius-lg: 8px;
+  --serif: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", Georgia, serif;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-primary);
+  margin: 0; padding: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+
+h1, h2, h3 { color: var(--text-primary); margin-top: 0; }
+h2 { font-family: var(--serif); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.section-title {
+  color: var(--accent-cyan);
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+/* ====== ボタン・汎用コンポーネント ====== */
+.btn {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+.btn:hover { background: var(--border-color); }
+.btn-primary { background: var(--accent-color); border-color: var(--accent-color); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-danger { background: rgba(239, 68, 68, 0.1); border-color: var(--danger); color: var(--danger); }
+.btn-danger:hover { background: var(--danger); color: #fff; }
+
+/* ====== 1. 基地ページの「基地戦サマリ」区画 ====== */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.status-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.status-panel.alert {
+  border-color: var(--danger);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.1);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.5rem;
+}
+
+.panel-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+}
+.status-indicator.safe::before { content: ''; display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+.status-indicator.danger::before { content: ''; display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+.summary-stats {
+  display: flex;
+  gap: 1.5rem;
+}
+.stat-box { display: flex; flex-direction: column; }
+.stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; }
+.stat-value { font-size: 1.5rem; font-weight: bold; font-variant-numeric: tabular-nums; }
+.stat-value.red { color: var(--danger); }
+.stat-value.green { color: var(--success); }
+
+/* ====== 2. 襲撃対象の基地ビュー ====== */
+.target-base-view {
+  background: url('../PM-5-replay/assets/battle-bg-space.jpg') center/cover;
+  position: relative;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+.target-base-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(15,23,42,0.9), rgba(15,23,42,0.4));
+}
+.target-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.target-info h3 { font-size: 1.8rem; margin: 0 0 0.5rem 0; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+.target-owner { font-size: 1rem; color: var(--text-secondary); }
+
+.facility-preview {
+  display: flex;
+  gap: 1rem;
+  background: rgba(0,0,0,0.5);
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(4px);
+}
+.fac-item { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+.fac-item .icon { font-size: 1.5rem; }
+.fac-item .lv { font-size: 0.8rem; font-weight: bold; color: var(--accent-cyan); }
+
+/* シールド演出 */
+.shield-active {
+  box-shadow: inset 0 0 50px rgba(168, 85, 247, 0.4);
+  border-color: var(--shield);
+}
+.shield-banner {
+  background: rgba(168, 85, 247, 0.2);
+  color: #e9d5ff;
+  border: 1px solid var(--shield);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+
+/* ====== 3. 基地戦の戦闘画面 (mock-replay流用) ====== */
+.replay-container {
+  position: relative; width: 100%; height: 500px;
+  border-radius: var(--radius-lg); border: 1px solid var(--border-color);
+  display: flex; flex-direction: column; overflow: hidden; background: #0f172a;
+}
+.battle-stage-area { flex: 1; position: relative; overflow: hidden; }
+.battle-stage-bg { position: absolute; inset: 0; background: url('../PM-5-replay/assets/battle-bg-space.jpg') center/cover no-repeat; }
+.stage-unit { position: absolute; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45)); display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+.stage-attacker { left: 15%; bottom: 6%; transform: scaleX(-1); }
+.stage-defender { right: 15%; bottom: 6%; }
+.mock-unit-img { max-height: 200px; width: auto; }
+.mock-turret-img { max-height: 100px; width: auto; margin-right: -20px; filter: drop-shadow(0 0 8px rgba(255,0,0,0.5)); }
+.explosion-effect {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 150px; height: 150px; background: radial-gradient(circle, #fff 10%, #fbbf24 30%, #ef4444 60%, transparent 80%);
+  border-radius: 50%; pointer-events: none; z-index: 100; opacity: 0.8;
+}
+.damage-flash { position: absolute; top: -20%; left: 50%; transform: translate(-50%, 0); font-size: 2rem; font-weight: 800; color: #ef4444; text-shadow: 0 2px 6px rgba(0,0,0,0.8); white-space: nowrap; }
+
+.battle-message-area { height: 120px; background: #0b1021; border-top: 1px solid var(--border-color); padding: 10px; display: flex; flex-direction: column; overflow-y: auto; font-size: 0.9rem; }
+.log-line { margin-bottom: 0.25rem; }
+.log-highlight { color: var(--warning); font-weight: bold; }
+
+/* ====== 4. 結果画面 ====== */
+.result-screen {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.result-bg-glow {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 300px; height: 300px; background: radial-gradient(circle, rgba(75, 255, 125, 0.15) 0%, transparent 70%);
+  border-radius: 50%; pointer-events: none;
+}
+.result-title { font-size: 2.5rem; color: var(--success); font-family: var(--serif); margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(75,255,125,0.3); }
+.plunder-amount { font-size: 3rem; font-weight: bold; color: #fff; margin: 1.5rem 0; font-variant-numeric: tabular-nums; }
+.plunder-amount span { font-size: 1.5rem; color: var(--text-secondary); }
+
+.victim-report {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius);
+  display: inline-block;
+  text-align: left;
+}
+.victim-report p { margin: 0 0 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>PM-6 基地戦 UIモックアップ</h2>
+
+  <!-- 1. 基地ページ内のサマリ区画 -->
+  <section>
+    <div class="section-title">1. 基地ページの「基地戦サマリ」区画 (Base.tsx)</div>
+    <div class="dashboard-grid">
+      <!-- 既存：個別戦サマリ -->
+      <div class="status-panel">
+        <div class="panel-header">
+          <div class="panel-title">個別戦 (King of the Hill)</div>
+          <div class="status-indicator safe">設置中</div>
+        </div>
+        <div class="summary-stats">
+          <div class="stat-box"><span class="stat-label">防衛連勝</span><span class="stat-value">5</span></div>
+          <div class="stat-box"><span class="stat-label">獲得戦果</span><span class="stat-value">120</span></div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">純粋な機体性能と戦術の競い合い。防衛者の座を守り抜け。</p>
+        <button class="btn" style="margin-top: auto;">個別戦の管理</button>
+      </div>
+
+      <!-- 新規：基地戦サマリ -->
+      <div class="status-panel alert">
+        <div class="panel-header">
+          <div class="panel-title">基地防衛 (Base Defense)</div>
+          <div class="status-indicator danger">被襲撃 2件</div>
+        </div>
+        <div class="summary-stats">
+          <div class="stat-box"><span class="stat-label">防衛成功</span><span class="stat-value green">1</span></div>
+          <div class="stat-box"><span class="stat-label">防衛失敗</span><span class="stat-value red">1</span></div>
+          <div class="stat-box"><span class="stat-label">被害総額</span><span class="stat-value red">-430<span style="font-size:1rem">pt</span></span></div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">未回収の発電所収入を狙う襲撃。現在、保護シールド展開中 (残り 7:42)</p>
+        <button class="btn btn-danger" style="margin-top: auto;">防衛履歴を確認 (New!)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 襲撃対象の基地ビュー -->
+  <section>
+    <div class="section-title">2. 襲撃対象の基地ビュー (プロフィール等からの導線)</div>
+    
+    <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+      <button class="btn" onclick="document.getElementById('mock-base').classList.remove('shield-active'); document.getElementById('shield-ui').style.display='none'; document.getElementById('attack-btn').disabled=false; document.getElementById('attack-btn').textContent='この基地を襲撃する';">通常状態</button>
+      <button class="btn" onclick="document.getElementById('mock-base').classList.add('shield-active'); document.getElementById('shield-ui').style.display='flex'; document.getElementById('attack-btn').disabled=true; document.getElementById('attack-btn').textContent='襲撃不可';">シールド展開中</button>
+    </div>
+
+    <div id="mock-base" class="target-base-view">
+      <div class="target-base-overlay"></div>
+      <div class="target-content">
+        <div class="target-info">
+          <h3>グラナダ第3基地</h3>
+          <div class="target-owner">Owner: シャア・アズナブル</div>
+        </div>
+        
+        <div class="facility-preview">
+          <div class="fac-item"><span class="icon">🏭</span><span class="lv">発電所 Lv4</span></div>
+          <div class="fac-item"><span class="icon">🗼</span><span class="lv">砲台 Lv3</span></div>
+          <div class="fac-item"><span class="icon">🏛️</span><span class="lv">博物館 Lv2</span></div>
+        </div>
+
+        <div id="shield-ui" class="shield-banner" style="display:none;">
+          🛡️ 保護シールド展開中 (解除まで 05:42:10)
+        </div>
+
+        <p style="font-size:0.85rem; color:var(--text-secondary); max-width:400px; line-height:1.5;">
+          この基地を襲撃し、勝利すれば未回収の資金を略奪できます。<br>
+          ※防衛側の砲台(Lv3)による先制迎撃を受けます。
+        </p>
+
+        <button id="attack-btn" class="btn btn-danger" style="font-size:1.1rem; padding: 0.75rem 2.5rem;">この基地を襲撃する</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 戦闘画面 -->
+  <section>
+    <div class="section-title">3. 基地戦の戦闘画面 (砲台迎撃フェーズ)</div>
+    <div class="replay-container">
+      <div class="battle-stage-area">
+        <div class="battle-stage-bg"></div>
+        <div class="stage-unit stage-attacker">
+          <img src="../PM-5-replay/assets/attacker-mech.png" alt="Attacker" class="mock-unit-img">
+        </div>
+        <div class="stage-unit stage-defender" style="flex-direction: row; align-items: flex-end;">
+          <!-- 砲台の攻撃エフェクト(ダミー) -->
+          <div class="explosion-effect" style="left: -150px; top: -50px;"></div>
+          <div class="damage-flash" style="left: -150px; top: -100px;">-150</div>
+          
+          <img src="../PM-5-replay/assets/turret.png" alt="Turret" class="mock-turret-img">
+          <img src="../PM-5-replay/assets/defense-mech.png" alt="Defender" class="mock-unit-img">
+        </div>
+      </div>
+      <div class="battle-message-area">
+        <div class="log-line log-highlight">【Turn 0】基地防衛システムの迎撃射撃！</div>
+        <div class="log-line">防衛側の砲台(Lv3)が侵入者を捕捉。2回の迎撃射撃。</div>
+        <div class="log-line">アムロ・レイ に 150 のダメージ！</div>
+        <div class="log-line">【Turn 1】本戦開始...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 結果画面 -->
+  <section>
+    <div class="section-title">4. 結果画面 (攻撃側勝利・略奪成功)</div>
+    <div class="result-screen">
+      <div class="result-bg-glow"></div>
+      <div class="result-title">MISSION ACCOMPLISHED</div>
+      <p style="color:var(--text-secondary);">敵基地の防衛部隊を沈黙させ、施設へのアクセスに成功しました。</p>
+      
+      <div class="plunder-amount">
+        +345 <span>pt</span>
+      </div>
+      <p style="color:var(--accent-cyan); font-weight:bold;">敵基地の未回収資金の30%を略奪しました！</p>
+      
+      <div style="margin-top: 2rem;">
+        <button class="btn btn-primary">基地へ帰還</button>
+      </div>
+
+      <!-- 防衛側から見た事後ログのプレビュー (補足用) -->
+      <div class="victim-report">
+        <p><strong>[防衛側の事後ログプレビュー]</strong></p>
+        <p>日時: 2026/07/20 23:15</p>
+        <p>結果: <strong>防衛失敗</strong> (襲撃者: アムロ・レイ)</p>
+        <p>被害: 発電所の未回収資金から <span style="color:var(--danger)">-345 pt</span> が略奪されました。</p>
+        <p>状態: 保護シールドが展開されました。(残り 8:00:00)</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>

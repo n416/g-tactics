@@ -275,6 +275,35 @@ describe('Defense (個別戦闘) API', () => {
     })
   })
 
+  describe('個別戦にTurn0（砲台迎撃）は発動しない', () => {
+    it('防衛側に砲台があっても個別戦ではTurn0の迎撃は発生しない', async () => {
+      await env.DB.prepare(`UPDATE characters SET money = 1000 WHERE id = 'def1'`).run()
+      await env.DB.prepare(`DELETE FROM defense_battles WHERE owner_id = 'def1'`).run()
+
+      const cRes = await app.request('/api/defense/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token1}` },
+        body: JSON.stringify({ title: '砲台テスト作戦', terrain: 1 })
+      }, env)
+      expect(cRes.status).toBe(200)
+      const gate: any = await env.DB.prepare(`SELECT id FROM defense_battles WHERE title = '砲台テスト作戦'`).first()
+
+      // 付与
+      await env.DB.prepare(`INSERT OR REPLACE INTO user_bases (user_id, name) VALUES ('def1', 'DefBase')`).run()
+      await env.DB.prepare(`INSERT OR REPLACE INTO user_facilities (user_id, facility, level) VALUES ('def1', 'turret', 1)`).run()
+
+      const res = await app.request(`/api/defense/challenge/${gate.id}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token2}` }
+      }, env)
+      const json = await res.json() as any
+      expect(json.success).toBe(true)
+
+      // ログに Turn 0 がないことを確認
+      const logRow: any = await env.DB.prepare(`SELECT log_text FROM battle_logs WHERE defense_battle_id = ? ORDER BY id DESC LIMIT 1`).bind(gate.id).first()
+      expect(logRow.log_text).not.toContain('Turn 0')
+    })
+  })
 })
 
 

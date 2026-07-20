@@ -351,7 +351,7 @@ const Battle: React.FC = () => {
         {renderChampionCard(teamChampion, '【 チーム優勝戦 】', 'team')}
 
         <div className="stats-allocation" style={{ marginTop: '2rem' }}>
-          <h3 style={{ margin: 0, marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>個別戦闘（作戦）一覧</h3>
+          <h3 style={{ margin: 0, marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>個別戦（作戦）一覧</h3>
           <div style={{ display: 'grid', gap: '1rem' }}>
             {defenses.map(d => (
               <div key={d.id} style={{ background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -395,13 +395,13 @@ const Battle: React.FC = () => {
 
         <div className="stats-allocation" style={{ marginTop: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1rem' }}>
-            <h3 style={{ margin: 0 }}>防衛データ作成 (名声10消費)</h3>
+            <h3 style={{ margin: 0 }}>個別戦の設置 (名声10消費)</h3>
             <button className="submit-btn" onClick={() => setCreateDefenseModal({ isOpen: true })} style={{ margin: 0, padding: '0.5rem 1rem' }}>
               作成する
             </button>
           </div>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0 }}>
-            現在のステータスと搭乗機体で防衛データを作成し、挑戦者を待ち受けます。<br/>
+            現在のステータスと搭乗機体で個別戦を設置し、挑戦者を待ち受けます。<br/>
             勝利するたびに報酬と名声が蓄積されます。
           </p>
         </div>
@@ -490,7 +490,7 @@ const Battle: React.FC = () => {
         <Modal
           open={createDefenseModal.isOpen}
           onClose={() => { setCreateDefenseModal({ isOpen: false }); setDefenseTitle(''); }}
-          title="個別戦闘の発動"
+          title="個別戦の発動"
           actions={
             <>
               <button type="button" className="text-btn" onClick={() => { setCreateDefenseModal({ isOpen: false }); setDefenseTitle(''); }}>
@@ -511,7 +511,7 @@ const Battle: React.FC = () => {
                   className="cyber-input"
                   value={defenseTitle}
                   onChange={(e) => setDefenseTitle(e.target.value)}
-                  placeholder="防衛線の名前を入力"
+                  placeholder="個別戦（作戦）の名前を入力"
                   maxLength={30}
                   required
                 />

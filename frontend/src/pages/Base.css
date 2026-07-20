@@ -1,0 +1,178 @@
+/* 基地特有のスタイル */
+.base-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: var(--space-4);
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+.base-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.chip-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  font-size: 0.8rem;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--panel-inset);
+  color: var(--text-primary);
+}
+.chip.success {
+  border-color: rgba(75, 255, 125, 0.3);
+  color: var(--success);
+}
+.chip.cyan {
+  border-color: rgba(79, 172, 254, 0.4);
+  color: var(--accent-cyan);
+}
+.defense-summary-panel {
+  display: flex;
+  align-items: center;
+}
+.defense-status {
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  border: 1px solid var(--border-color);
+  background: var(--panel-inset);
+}
+.defense-status .status-title {
+  font-weight: bold;
+  font-size: 0.85rem;
+  margin-bottom: 2px;
+}
+.defense-status .status-desc {
+  color: var(--text-secondary);
+}
+.defense-status.empty {
+  border-color: var(--text-muted);
+}
+.defense-status.safe {
+  border-color: rgba(75, 255, 125, 0.4);
+  background: rgba(75, 255, 125, 0.05);
+}
+.defense-status.safe .status-title { color: var(--success); }
+.defense-status.alert {
+  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.1);
+}
+.defense-status.alert .status-title { color: var(--danger); }
+.blink {
+  animation: blinker 1s linear infinite;
+}
+@keyframes blinker {
+  50% { opacity: 0.3; }
+}
+
+.facility-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.facility-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  transition: border-color 0.15s, transform 0.15s;
+}
+.facility-card:hover {
+  border-color: var(--text-muted);
+}
+.facility-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.facility-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.facility-lv {
+  font-size: 0.8rem;
+  color: var(--accent-cyan);
+  font-weight: bold;
+}
+.facility-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+.facility-card.locked {
+  opacity: 0.7;
+}
+.facility-card.locked .facility-lv {
+  color: var(--text-muted);
+}
+
+.facility-action {
+  margin-top: var(--space-2);
+  width: 100%;
+  padding: 6px;
+  font-size: 0.85rem;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-cyan);
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.facility-action:hover {
+  background: var(--accent-color);
+  color: #fff;
+}
+
+.museum-placeholder {
+  background: var(--panel-inset);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+.museum-placeholder span {
+  background: var(--bg-raised);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  border: 1px solid var(--border-color);
+}
+
+.base-form-container {
+  max-width: 400px;
+  margin: 2rem auto;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}

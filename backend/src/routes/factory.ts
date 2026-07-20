@@ -4,7 +4,8 @@ import { parseTraits } from '../utils/traits'
 import { applyCostDiscount, customizeFailBase, customizeFailRandMax, customizeSafeThreshold } from '../utils/traitEffects'
 import { calcMaxHp, calcMaxEn, getFullCharacter } from '../utils/battleEngine'
 import { calcTul } from '../utils/kaisyo'
-
+import { recordUnitObtained } from '../utils/unitStats'
+import { getFactoryDiscountRate, getDockDiscountRate } from '../utils/baseFacilities'
 type Bindings = {
   DB: D1Database
   JWT_SECRET: string
@@ -98,7 +99,10 @@ factoryApp.post('/buy_unit', async (c) => {
       });
     }
 
-    if (user.money < unit.price) {
+    const discountRate = await getFactoryDiscountRate(c.env.DB, payload.id as string)
+    const actualPrice = Math.floor(unit.price * (1 - discountRate))
+
+    if (user.money < actualPrice) {
       return c.json({ success: false, message: '資金が足りません' }, 400)
     }
 
@@ -106,7 +110,7 @@ factoryApp.post('/buy_unit', async (c) => {
       return c.json({ success: false, message: `名声が足りません（必要名声: ${unit.req_fame || 0}）` }, 400)
     }
 
-    const newMoney = user.money - unit.price
+    const newMoney = user.money - actualPrice
     const newFame = (user.fame || 0) - (unit.req_fame || 0)
 
     await c.env.DB.prepare(`
@@ -141,9 +145,12 @@ factoryApp.post('/buy_unit', async (c) => {
       'INSERT INTO hangars (user_id, unit_id) VALUES (?, ?)'
     ).bind(payload.id, unit.id).run()
 
+    await recordUnitObtained(c.env.DB, payload.id as string, unit.id)
+
+    const discountMsg = discountRate > 0 ? `（工場割引 -${discountRate * 100}%）` : '';
     return c.json({
       success: true,
-      message: `${unit.name} を購入し、搭乗しました。`,
+      message: `${unit.name} を購入し、搭乗しました。${discountMsg}`,
       new_money: newMoney,
       new_unit_id: unit.id
     })
@@ -527,7 +534,7 @@ factoryApp.post('/seibi', async (c) => {
       const champRows = (champs.results || []) as any[]
       const gateRows = (gates.results || []) as any[]
       if (champRows.length === 0 && gateRows.length === 0) {
-        return c.json({ success: false, message: '優勝者または個別戦闘の防衛者ではありません。' }, 400)
+        return c.json({ success: false, message: '優勝者または個別戦の防衛者ではありません。' }, 400)
       }
 
       const snapMax = (sd: any): [number, number] => {
@@ -551,6 +558,12 @@ factoryApp.post('/seibi', async (c) => {
       if (kind > 11) kind = 11
       let kcost = Math.floor((kai_ind + (user.unit_custom_lp || 0) / 4) * (kind / 10))
       kcost = applyCostDiscount(parseTraits(user.traits), kcost)
+
+      const dockDiscount = await getDockDiscountRate(c.env.DB, payload.id as string);
+      if (dockDiscount > 0) {
+        kcost = Math.floor(kcost * (1 - dockDiscount));
+      }
+
       if (kcost < user.level) kcost = user.level
 
       if (user.money < kcost) {
@@ -573,7 +586,8 @@ factoryApp.post('/seibi', async (c) => {
       }
       await c.env.DB.prepare(`UPDATE characters SET money = money - ? WHERE id = ?`).bind(kcost, payload.id).run()
 
-      return c.json({ success: true, message: `${kcost}G を消費して防衛機体を整備しました！`, new_money: user.money - kcost })
+      const dockMsg = dockDiscount > 0 ? `（修理ドック割引 -${dockDiscount * 100}%）` : '';
+      return c.json({ success: true, message: `${kcost}G を消費して防衛機体を整備しました！${dockMsg}`, new_money: user.money - kcost })
     }
 
     if (hangar_id) {
@@ -620,6 +634,11 @@ factoryApp.post('/seibi', async (c) => {
     // -- P20: 整備コスト減（器用。割引はtraitEffectsに集約） --
     kcost = applyCostDiscount(parseTraits(user.traits), kcost);
 
+    const dockDiscount = await getDockDiscountRate(c.env.DB, payload.id as string);
+    if (dockDiscount > 0) {
+      kcost = Math.floor(kcost * (1 - dockDiscount));
+    }
+
     if (kcost < user.level) {
       kcost = user.level;
     }
@@ -641,9 +660,10 @@ factoryApp.post('/seibi', async (c) => {
       ).bind(user.money - kcost, payload.id).run()
     }
 
+    const dockMsg = dockDiscount > 0 ? `（修理ドック割引 -${dockDiscount * 100}%）` : '';
     return c.json({
       success: true,
-      message: `${kcost}G を消費して機体を整備しました！`,
+      message: `${kcost}G を消費して機体を整備しました！${dockMsg}`,
       new_money: user.money - kcost,
       new_hp: maxHp,
       new_en: maxEn

@@ -1,0 +1,174 @@
+:root {
+  --museum-gold: #d8b25a;
+  --museum-gold-dim: rgba(216, 178, 90, 0.35);
+  --hall-bg: #0a0f1f;
+  --serif: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", Georgia, serif;
+}
+
+.museum-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.museum-nav {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.5rem;
+}
+.museum-nav button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  transition: all 0.2s;
+}
+.museum-nav button.active {
+  color: var(--museum-gold);
+  background: rgba(216, 178, 90, 0.1);
+  font-weight: bold;
+}
+.museum-nav button:hover:not(.active) {
+  background: var(--panel-bg);
+  color: var(--text-primary);
+}
+
+.section-title {
+  font-family: var(--serif);
+  color: var(--accent-cyan);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* 共通UI部品 */
+.museum-btn {
+  background: var(--panel-bg); border: 1px solid var(--border-color); color: var(--text-primary);
+  padding: 0.4rem 1rem; border-radius: var(--radius); cursor: pointer; font-size: 0.85rem;
+}
+.museum-btn.primary { background: var(--accent-color); border-color: var(--accent-hover); }
+.museum-btn.gold { background: rgba(216, 178, 90, 0.1); border-color: var(--museum-gold); color: var(--museum-gold); }
+.museum-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- 1. 博物館ホール ---------- */
+.hall {
+  background: radial-gradient(ellipse 120% 60% at 50% -10%, rgba(216, 178, 90, 0.07), transparent 60%), var(--hall-bg);
+  border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;
+}
+.hall-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;
+}
+.hall-head h2 { font-family: var(--serif); font-size: 1.45rem; margin: 0; color: var(--museum-gold); letter-spacing: 0.12em; }
+.hall-head .collection { margin-left: auto; min-width: 200px; }
+.col-label { font-size: 0.75rem; color: var(--text-secondary); display: flex; justify-content: space-between; }
+.col-label strong { color: var(--text-primary); }
+.col-bar { height: 5px; background: var(--panel-inset); border-radius: 999px; overflow: hidden; margin-top: 0.3rem;}
+.col-bar span { display: block; height: 100%; min-width: 8px; background: linear-gradient(90deg, var(--museum-gold), #f0d79a); }
+
+/* 殿堂 */
+.featured {
+  display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: stretch;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.25rem;
+  position: relative;
+}
+.featured .edit-btn { position: absolute; top: 1rem; right: 1rem; }
+.stage {
+  flex: 0 0 260px; min-height: 250px; position: relative;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.stage .spotlight { position: absolute; inset: 0; background: radial-gradient(ellipse 55% 75% at 50% 20%, rgba(216, 178, 90, 0.18), transparent 70%); }
+.stage .hero-image {
+  height: 220px; z-index: 1; margin-bottom: 15px;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.6));
+}
+.stage .placeholder-img {
+  width: 180px; height: 200px; background: rgba(0,0,0,0.4); border: 1px dashed var(--text-muted);
+  display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.8rem; z-index: 1; margin-bottom: 10px;
+}
+.stage .pedestal { position: absolute; bottom: 0; width: 78%; height: 22px; background: linear-gradient(180deg, #2a3550, #131b30); border: 1px solid var(--border-color); border-radius: 3px 3px 6px 6px; }
+.plaque-main { flex: 1 1 300px; display: flex; flex-direction: column; gap: 0.7rem; justify-content: center; }
+.exhibit-tag { font-size: 0.68rem; letter-spacing: 0.28em; color: var(--museum-gold); text-transform: uppercase; }
+.plaque-main h3 { font-family: var(--serif); font-size: 1.6rem; margin: 0; }
+.plaque-main h3 small { display: block; font-size: 0.85rem; color: var(--text-muted); }
+.stat-row { display: flex; flex-wrap: wrap; gap: 0.6rem 1.5rem; }
+.stat { display: flex; flex-direction: column; gap: 0.1rem; }
+.stat .k { font-size: 0.68rem; color: var(--text-muted); }
+.stat .v { font-size: 1.05rem; font-weight: 700; }
+.stat .v.gold { color: var(--museum-gold); }
+.owner-note { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; border-left: 2px solid var(--museum-gold-dim); padding-left: 0.8rem; white-space: pre-wrap; }
+
+/* グリッド */
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 1rem; }
+.gallery-head { display: flex; justify-content: space-between; align-items: center; }
+.exhibit {
+  position: relative; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 55%);
+  border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1rem 0.75rem 0;
+  display: flex; flex-direction: column; overflow: hidden;
+  transition: transform 0.18s, border-color 0.18s;
+}
+.exhibit:hover { transform: translateY(-3px); border-color: var(--museum-gold-dim); }
+.exhibit .light { position: absolute; inset: 0 0 auto 0; height: 65%; background: radial-gradient(ellipse 60% 90% at 50% 0%, rgba(216, 178, 90, 0.12), transparent 70%); }
+.exhibit .body { flex: 1; display: flex; align-items: flex-end; justify-content: center; min-height: 120px; padding-bottom: 10px; }
+.exhibit .body .unit-img { height: 110px; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.55)); }
+.base-slab { height: 10px; background: linear-gradient(180deg, #26304a, #131b30); border-top: 1px solid var(--border-color); margin: 0 -0.75rem; }
+.plaque { background: #10182c; margin: 0 -0.75rem; padding: 0.6rem 0.8rem; border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; }
+.plaque .model { font-size: 0.64rem; color: var(--text-muted); }
+.plaque .name { font-family: var(--serif); font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.plaque .meta { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.2rem;}
+.plaque .meta .count { color: var(--museum-gold); }
+
+.exhibit.empty { border-style: dashed; border-color: var(--border-color); background: none; }
+.exhibit.empty:hover { transform: none; border-color: var(--border-color); }
+.exhibit.empty .q { font-family: var(--serif); font-size: 2.4rem; color: var(--text-muted); opacity: 0.5; margin: auto; }
+
+.exhibit.locked { border-color: #1e293b; opacity: 0.6; }
+.exhibit.locked .q { font-size: 1.5rem; }
+
+/* ---------- 2. 展示編集モード ---------- */
+.edit-mode { background: var(--bg-raised); border: 1px solid var(--accent-cyan); border-radius: var(--radius-lg); padding: 1.5rem; }
+.edit-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem; }
+.inventory { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 1rem; }
+.inv-item {
+  min-width: 100px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: var(--radius);
+  padding: 0.5rem; text-align: center; cursor: pointer; transition: border-color 0.15s;
+}
+.inv-item:hover, .inv-item.selected { border-color: var(--accent-cyan); }
+.inv-item.selected { background: rgba(79, 172, 254, 0.1); }
+.inv-item .img-ph { height: 60px; margin: 0 auto 0.5rem; display: flex; align-items:flex-end; justify-content: center; }
+.inv-item .img-ph img { max-height: 60px; max-width: 80px; object-fit: contain; }
+.inv-item .name { font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.edit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; opacity: 0.9; }
+.edit-exhibit { border: 2px dashed var(--accent-cyan); border-radius: var(--radius); padding: 1rem; text-align: center; background: rgba(79, 172, 254, 0.05); cursor: pointer; }
+.edit-exhibit:hover { background: rgba(79, 172, 254, 0.15); }
+.edit-exhibit.filled { border-style: solid; border-color: var(--border-color); background: var(--panel-bg); }
+.edit-exhibit.filled:hover { border-color: var(--danger); }
+
+/* ---------- 3. 館長コメント編集 ---------- */
+.comment-edit { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; display: flex; gap: 2rem; flex-wrap: wrap;}
+.comment-form { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 1rem; }
+.comment-form textarea { width: 100%; height: 100px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem; border-radius: var(--radius); resize: vertical; }
+.comment-form .char-count { font-size: 0.75rem; color: var(--text-muted); text-align: right; }
+
+/* ---------- 4. 図鑑 (コレクション) ---------- */
+.pokedex { background: var(--hall-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; }
+.poke-filters { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+.poke-filters input, .poke-filters select { background: var(--panel-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.4rem 0.8rem; border-radius: var(--radius); }
+.poke-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; }
+.poke-card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 0.8rem; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+.poke-card .img-ph { height: 80px; margin: 0 auto 0.5rem; display: flex; align-items: flex-end; justify-content: center; }
+.poke-card .img-ph img { max-height: 80px; max-width: 100px; object-fit: contain; }
+.poke-card.uncollected { opacity: 0.5; filter: grayscale(1); }
+.poke-card.uncollected .img-ph { background: #111; color: #444; font-size: 2rem; align-items: center; border-radius: 4px; width: 80px;}
+.poke-card .name { font-size: 0.8rem; font-weight: bold; margin-bottom: 0.3rem;}
+.poke-card .stats { font-size: 0.65rem; color: var(--text-secondary); display: flex; justify-content: space-between;}

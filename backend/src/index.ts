@@ -17,6 +17,10 @@ import { factionUnitApp } from './routes/faction_unit'
 import { championApp } from './routes/champion'
 import { defenseApp } from './routes/defense'
 import { homeApp } from './routes/home'
+import { baseApp } from './routes/base'
+import { museumApp } from './routes/museum'
+import { replayApp } from './routes/replay'
+import { guestbookApp } from './routes/guestbook'
 type Bindings = {
   DB: D1Database
   // 機体画像を格納する R2。画像はリポジトリに含めず、デプロイとは独立して更新する
@@ -83,6 +87,10 @@ const routes = app
   .route('/api/champion', championApp)
   .route('/api/defense', defenseApp)
   .route('/api/home', homeApp)
+  .route('/api/base', baseApp)
+  .route('/api/museum', museumApp)
+  .route('/api/replay', replayApp)
+  .route('/api/guestbook', guestbookApp)
 
 export type AppType = typeof routes
 export default app

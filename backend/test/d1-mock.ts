@@ -31,7 +31,13 @@ export class D1Mock {
       },
       run: async () => {
         const info = stmt.run(...boundParams)
-        return { success: true, meta: info }
+        return { 
+          success: true, 
+          meta: {
+            last_row_id: info.lastInsertRowid,
+            changes: info.changes
+          } 
+        }
       }
     }
 

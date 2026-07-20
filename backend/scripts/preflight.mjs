@@ -59,6 +59,13 @@ const checks = [
   { sql: `SELECT COUNT(*) AS n FROM pragma_table_info('characters') WHERE name='google_sub';`, want: 1,
     okMsg: 'google_sub カラムがある', ngMsg: 'google_sub カラムが無い（Google 連携が落ちる）',
     how: 'npx wrangler d1 execute gtactics-db --remote --file ./tools/p57_add_google_sub.sql' },
+  // P58（基地・博物館機能群）は1本の統合スクリプト。検知はテーブル/列ごとに分けて原因を特定しやすくする
+  { sql: `SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN ('user_unit_stats', 'user_bases', 'user_facilities', 'museum_settings', 'museum_exhibits', 'museum_guestbook');`, want: 6,
+    okMsg: '基地・博物館機能群のテーブル6種がある', ngMsg: '基地・博物館機能群のテーブルが不足（基地/博物館/図鑑/ノートが落ちる）',
+    how: 'npx wrangler d1 execute gtactics-db --remote --file ./tools/p58_base_museum.sql' },
+  { sql: `SELECT COUNT(*) AS n FROM pragma_table_info('user_bases') WHERE name='shield_until';`, want: 1,
+    okMsg: 'user_bases.shield_until カラムがある', ngMsg: '基地シールド用カラムが無い（旧p59適用DBのみ。手動ALTERが必要。p58_base_museum.sql のヘッダー参照）',
+    how: `npx wrangler d1 execute gtactics-db --remote --command "ALTER TABLE user_bases ADD COLUMN shield_until INTEGER NOT NULL DEFAULT 0;"` },
 ];
 for (const c of checks) {
   try {

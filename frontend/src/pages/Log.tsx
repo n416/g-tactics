@@ -8,6 +8,7 @@ interface BattleLog {
   created_at: string;
   log_text: string;
   attacker_name: string;
+  has_replay: number;
 }
 
 export const Log: React.FC = () => {
@@ -52,7 +53,7 @@ export const Log: React.FC = () => {
     <div className="register-container" style={{ padding: '2rem 0' }}>
       <div className="glass-panel" style={{ maxWidth: '800px', width: '100%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h1 className="cyber-title" style={{ fontSize: '1.5rem', marginBottom: 0 }}>DEFENSE LOG</h1>
+          <h1 className="cyber-title" style={{ fontSize: '1.5rem', marginBottom: 0 }}>個別戦履歴</h1>
           <button onClick={() => navigate('/mypage')} className="submit-btn" style={{ margin: 0, padding: '8px 16px' }}>BACK TO CENTER</button>
         </div>
 
@@ -62,7 +63,7 @@ export const Log: React.FC = () => {
           <div className="error-message">{error}</div>
         ) : logs.length === 0 ? (
           <div style={{ color: '#aaa', textAlign: 'center', padding: '2rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
-            防衛履歴はありません。
+            個別戦履歴はありません。
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -77,7 +78,7 @@ export const Log: React.FC = () => {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
                   <div style={{ fontSize: '1.1rem', color: '#fff', fontWeight: 'bold' }}>
-                    <span style={{ color: '#00f2fe' }}>{log.attacker_name}</span> からの襲撃
+                    <span style={{ color: '#00f2fe' }}>{log.attacker_name}</span> からの挑戦
                   </div>
                   <div style={{ color: '#888', fontSize: '0.9rem' }}>
                     {new Date(log.created_at).toLocaleString('ja-JP')}
@@ -88,16 +89,35 @@ export const Log: React.FC = () => {
                   <div style={{ flex: 1, maxHeight: '150px', overflowY: 'auto', padding: '10px', background: 'rgba(0,0,0,0.5)', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.9rem', color: '#ccc', whiteSpace: 'pre-wrap' }}>
                     {log.log_text}
                   </div>
-                  <div style={{ 
-                    minWidth: '100px', 
-                    textAlign: 'center', 
-                    padding: '10px', 
-                    background: log.is_attacker_win ? 'rgba(229, 62, 62, 0.2)' : 'rgba(72, 187, 120, 0.2)',
-                    color: log.is_attacker_win ? '#fc8181' : '#68d391',
-                    borderRadius: '4px',
-                    fontWeight: 'bold'
-                  }}>
-                    {log.is_attacker_win ? '防衛失敗 (LOSE)' : '防衛成功 (WIN)'}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                    <div style={{ 
+                      minWidth: '100px', 
+                      textAlign: 'center', 
+                      padding: '10px', 
+                      background: log.is_attacker_win ? 'rgba(229, 62, 62, 0.2)' : 'rgba(72, 187, 120, 0.2)',
+                      color: log.is_attacker_win ? '#fc8181' : '#68d391',
+                      borderRadius: '4px',
+                      fontWeight: 'bold'
+                    }}>
+                      {log.is_attacker_win ? '防衛失敗 (LOSE)' : '防衛成功 (WIN)'}
+                    </div>
+                    {log.has_replay === 1 ? (
+                      <button 
+                        className="submit-btn" 
+                        style={{ padding: '8px 16px', fontSize: '0.85rem', width: '100%', margin: 0 }}
+                        onClick={() => navigate(`/replay/${log.id}`)}
+                      >
+                        リプレイを見る
+                      </button>
+                    ) : (
+                      <button 
+                        className="submit-btn" 
+                        style={{ padding: '8px 16px', fontSize: '0.85rem', width: '100%', margin: 0, opacity: 0.5, cursor: 'not-allowed' }}
+                        disabled
+                      >
+                        リプレイ期限切れ
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

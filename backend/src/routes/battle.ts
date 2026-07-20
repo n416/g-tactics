@@ -404,7 +404,8 @@ battleApp.get('/logs', async (c) => {
     if (!payload || !payload.id) return c.json({ success: false, message: 'Invalid token' }, 401)
 
     const { results } = await c.env.DB.prepare(
-      `SELECT b.id, b.is_attacker_win, b.created_at, b.log_text, c.handle_name as attacker_name 
+      `SELECT b.id, b.is_attacker_win, b.created_at, b.log_text, c.handle_name as attacker_name,
+              CASE WHEN b.events_json IS NOT NULL THEN 1 ELSE 0 END as has_replay
        FROM battle_logs b
        JOIN characters c ON b.attacker_id = c.id
        WHERE b.defender_id = ?

@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { verify } from 'hono/jwt'
+import { recordUnitObtained } from '../utils/unitStats'
 
 type Bindings = {
   DB: D1Database
@@ -30,6 +31,7 @@ async function settleExpiredAuctions(db: any) {
         await db.prepare('UPDATE characters SET money = money + ? WHERE id = ?').bind(listing.current_bid, listing.seller_id).run()
         if (listing.listing_type === 'unit') {
           await db.prepare('INSERT INTO hangars (user_id, unit_id) VALUES (?, ?)').bind(bidder.id, listing.target_id).run()
+          await recordUnitObtained(db, bidder.id as string, listing.target_id)
         } else {
           await db.prepare('INSERT INTO item_inventory (user_id, item_id) VALUES (?, ?)').bind(bidder.id, listing.target_id).run()
         }
@@ -245,6 +247,7 @@ tradeApp.post('/buy', async (c) => {
     // アイテム/機体の譲渡
     if (listing.listing_type === 'unit') {
       await c.env.DB.prepare('INSERT INTO hangars (user_id, unit_id) VALUES (?, ?)').bind(buyer.id, listing.target_id).run()
+      await recordUnitObtained(c.env.DB, buyer.id as string, listing.target_id)
     } else {
       await c.env.DB.prepare('INSERT INTO item_inventory (user_id, item_id) VALUES (?, ?)').bind(buyer.id, listing.target_id).run()
     }

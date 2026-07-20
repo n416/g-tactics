@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>基地 - G-TACTICS モック</title>
+  <style>
+    /* frontend/src/index.css / AppLayout.css 相当のトークンとレイアウト定義 */
+    :root {
+      --bg-color: #0f172a;
+      --bg-raised: #16213a;
+      --panel-bg: #1e293b;
+      --panel-inset: rgba(0, 0, 0, 0.25);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-color: #334155;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --accent-color: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-cyan: #4facfe;
+      --success: #4bff7d;
+      --warning: #ecc94b;
+      --danger: #ef4444;
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --radius: 4px;
+      --radius-lg: 8px;
+      --header-h: 56px;
+      --sidebar-w: 220px;
+      --content-max: 1100px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent-cyan); text-decoration: none; }
+    
+    /* ボタン等のプリミティブ */
+    button {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: var(--space-3) var(--space-5);
+      border-radius: var(--radius);
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover { background: var(--border-color); }
+    .submit-btn { background: var(--accent-color); color: #fff; border: none; font-weight: bold; }
+    .submit-btn:hover { background: var(--accent-hover); }
+    .text-btn { background: transparent; border: none; color: var(--text-secondary); }
+    .text-btn:hover { color: var(--text-primary); }
+
+    /* AppLayout (ダミー) */
+    .layout-header {
+      position: fixed; top: 0; left: 0; right: 0; height: var(--header-h); z-index: 100;
+      display: flex; align-items: center; gap: var(--space-4); padding: 0 var(--space-4);
+      background: var(--bg-raised); border-bottom: 1px solid var(--border-color);
+    }
+    .layout-brand { font-weight: 700; color: var(--text-primary); }
+    .layout-brand span { color: var(--accent-cyan); }
+    .hud { display: flex; align-items: center; gap: var(--space-5); margin-left: auto; font-size: 0.8rem; }
+    .hud-money { color: var(--warning); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .hud-item { display: flex; flex-direction: column; gap: 3px; min-width: 84px; }
+    .hud-label { color: var(--text-muted); font-size: 0.65rem; display: flex; justify-content: space-between; }
+    .hud-bar { height: 3px; background: rgba(0, 0, 0, 0.5); border-radius: 2px; overflow: hidden; }
+    
+    .layout-nav {
+      position: fixed; top: var(--header-h); left: 0; bottom: 0; width: var(--sidebar-w); z-index: 90;
+      padding: var(--space-4) var(--space-3); background: var(--bg-raised); border-right: 1px solid var(--border-color);
+    }
+    .nav-group-title { font-size: 0.65rem; font-weight: 700; color: var(--text-muted); padding: 0 var(--space-3); margin-bottom: var(--space-2); margin-top: var(--space-5); }
+    .nav-link { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); color: var(--text-secondary); border-radius: var(--radius); font-size: 0.875rem; }
+    .nav-link.active { background: rgba(59, 130, 246, 0.14); color: var(--text-primary); box-shadow: inset 2px 0 0 var(--accent-color); }
+    .nav-link.primary { background: var(--accent-color); color: #fff; justify-content: center; font-weight: 700; margin-bottom: var(--space-4); }
+
+    .layout-main {
+      padding-top: calc(var(--header-h) + var(--space-5));
+      padding-left: calc(var(--sidebar-w) + var(--space-5));
+      padding-right: var(--space-5);
+      padding-bottom: var(--space-8);
+      max-width: calc(var(--content-max) + var(--sidebar-w));
+      margin: 0 auto;
+    }
+
+    /* 基地特有のスタイル */
+    .base-container {
+      display: flex; flex-direction: column; gap: var(--space-6);
+    }
+    
+    .page-head {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      border-bottom: 1px solid var(--border-subtle); padding-bottom: var(--space-4);
+      flex-wrap: wrap; gap: var(--space-4);
+    }
+    .base-title { font-size: 1.5rem; font-weight: 700; margin-bottom: var(--space-2); }
+    
+    .chip-row { display: flex; gap: var(--space-3); align-items: center; font-size: 0.8rem; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border-color);
+      background: var(--panel-inset); color: var(--text-primary);
+    }
+    .chip.success { border-color: rgba(75, 255, 125, 0.3); color: var(--success); }
+    .chip.cyan { border-color: rgba(79, 172, 254, 0.4); color: var(--accent-cyan); }
+    .defense-log { font-size: 0.85rem; color: var(--text-secondary); }
+
+    .facility-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: var(--space-4);
+    }
+    
+    .facility-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      display: flex; flex-direction: column; gap: var(--space-2);
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .facility-card:hover { border-color: var(--text-muted); }
+    .facility-head { display: flex; justify-content: space-between; align-items: baseline; }
+    .facility-name { font-weight: 700; font-size: 1.05rem; }
+    .facility-lv { font-size: 0.8rem; color: var(--accent-cyan); font-weight: bold; }
+    .facility-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; flex-grow: 1; }
+    
+    .facility-card.locked { opacity: 0.7; }
+    .facility-card.locked .facility-lv { color: var(--text-muted); }
+    
+    .facility-action {
+      margin-top: var(--space-2);
+      width: 100%;
+      padding: 6px;
+      font-size: 0.85rem;
+      border: 1px solid var(--accent-color);
+      color: var(--accent-cyan);
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .facility-action:hover { background: var(--accent-color); color: #fff; }
+    
+    .museum-placeholder {
+      background: var(--panel-inset);
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 4rem 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+    }
+    .museum-placeholder span {
+      background: var(--bg-raised);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px solid var(--border-color);
+    }
+
+    /* モーダル */
+    .modal-scrim {
+      position: fixed; inset: 0; z-index: 9000;
+      background: rgba(0, 0, 0, 0.65); display: flex; align-items: center; justify-content: center;
+      padding: var(--space-4);
+    }
+    .modal-box {
+      background: var(--panel-bg); border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg); width: 100%; max-width: 460px;
+      display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .modal-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: var(--space-4); border-bottom: 1px solid var(--border-subtle);
+    }
+    .modal-title { color: var(--accent-cyan); font-weight: 700; font-size: 1.05rem; margin: 0; }
+    .modal-body { padding: var(--space-4); line-height: 1.6; font-size: 0.95rem; color: var(--text-primary); }
+    .modal-foot {
+      display: flex; justify-content: flex-end; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4) var(--space-4);
+    }
+    .cost-text { color: var(--warning); font-weight: bold; font-variant-numeric: tabular-nums; }
+    
+    /* モック注記 */
+    .mock-note {
+      position: fixed; right: 12px; bottom: 12px; z-index: 9999;
+      background: rgba(239, 68, 68, 0.9); color: #fff;
+      padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="layout-header">
+    <div class="layout-brand">G<span>-</span>Tactics</div>
+    <div class="hud">
+      <div class="hud-item"><div class="hud-label"><span style="color:var(--text-primary)">耐久</span><span style="color:var(--text-primary)">300/300</span></div><div class="hud-bar"><i style="width: 100%; background: var(--success); display: block; height: 100%;"></i></div></div>
+      <div class="hud-item"><div class="hud-label"><span style="color:var(--text-primary)">EN</span><span style="color:var(--text-primary)">150/150</span></div><div class="hud-bar"><i style="width: 100%; background: var(--accent-color); display: block; height: 100%;"></i></div></div>
+      <div class="hud-money">48,200 pt</div>
+    </div>
+  </header>
+
+  <nav class="layout-nav">
+    <a href="#" class="nav-link primary"><span class="nav-ico">⚔</span>出撃</a>
+    <a href="#" class="nav-link"><span class="nav-ico">◈</span>ステータス</a>
+    <div class="nav-group-title">拠点</div>
+    <a href="#" class="nav-link"><span class="nav-ico">⬢</span>格納庫</a>
+    <a href="#" class="nav-link active"><span class="nav-ico">⛫</span>基地</a>
+  </nav>
+
+  <main class="layout-main">
+    <div class="base-container">
+      
+      <div class="page-head">
+        <div>
+          <div class="base-title">グラナダ第3基地</div>
+          <div class="chip-row">
+            <span class="chip cyan"><span style="width:6px;height:6px;border-radius:50%;background:currentColor;"></span>宇宙域</span>
+            <span class="chip success"><span style="width:6px;height:6px;border-radius:50%;background:currentColor;"></span>資金 +50G / 時</span>
+            <span class="chip" style="cursor:pointer;" onclick="console.log('ダミーです')">収益を受け取る</span>
+          </div>
+        </div>
+        <div class="defense-log">
+          昨夜 1 件の襲撃 — <strong style="color:var(--success)">防衛成功</strong>（<a href="#">リプレイを見る</a>）
+        </div>
+      </div>
+
+      <h2 style="font-size: 1.1rem; color: var(--text-secondary); border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-2);">基地施設</h2>
+      <div class="facility-grid">
+        
+        <div class="facility-card">
+          <div class="facility-head">
+            <div class="facility-name">発電所</div>
+            <div class="facility-lv">Lv 2</div>
+          </div>
+          <div class="facility-desc">基地の資金収入を生み出す。<br>現在: +50G/時</div>
+          <button class="facility-action" onclick="document.getElementById('upgrade-modal').style.display='flex'">Lv3 へ強化 (8,000G)</button>
+        </div>
+
+        <div class="facility-card">
+          <div class="facility-head">
+            <div class="facility-name">修理ドック</div>
+            <div class="facility-lv">Lv 1</div>
+          </div>
+          <div class="facility-desc">戦闘後の耐久回復速度を上げる。<br>現在: 1.2倍速</div>
+          <button class="facility-action" onclick="console.log('ダミーです')">Lv2 へ強化 (3,000G)</button>
+        </div>
+
+        <div class="facility-card">
+          <div class="facility-head">
+            <div class="facility-name">砲台</div>
+            <div class="facility-lv">Lv 1</div>
+          </div>
+          <div class="facility-desc">防衛戦の開幕に迎撃射撃を行う。<br>現在: 1回 (小)</div>
+          <button class="facility-action" onclick="console.log('ダミーです')">Lv2 へ強化 (2,500G)</button>
+        </div>
+
+        <div class="facility-card">
+          <div class="facility-head">
+            <div class="facility-name">博物館</div>
+            <div class="facility-lv">Lv 2</div>
+          </div>
+          <div class="facility-desc">収集した機体を展示できる。<br>現在: 8枠</div>
+          <button class="facility-action" onclick="console.log('ダミーです')">Lv3 へ強化 (15,000G)</button>
+        </div>
+
+        <div class="facility-card locked">
+          <div class="facility-head">
+            <div class="facility-name">工場</div>
+            <div class="facility-lv">未建設</div>
+          </div>
+          <div class="facility-desc">ショップでの機体購入・改造費用が割引される。</div>
+          <button class="facility-action" onclick="console.log('ダミーです')">建設する (8,000G)</button>
+        </div>
+
+      </div>
+
+      <h2 style="font-size: 1.1rem; color: var(--text-secondary); border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-2); margin-top: var(--space-4);">機体博物館</h2>
+      <div class="museum-placeholder">
+        <div>ここに博物館ホールの展示区画（殿堂、展示グリッドなど）が配置されます。</div>
+        <span>※ PM-3 スレッドにて設計・実装予定</span>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 強化モーダル -->
+  <div id="upgrade-modal" class="modal-scrim" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-title">施設の強化</div>
+        <button class="text-btn" style="padding: 4px 8px;" onclick="document.getElementById('upgrade-modal').style.display='none'">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1rem;"><strong>発電所</strong> を Lv3 に強化しますか？</p>
+        <div style="background: var(--panel-inset); padding: 1rem; border-radius: var(--radius); border: 1px solid var(--border-color);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span style="color: var(--text-muted)">効果</span>
+            <span>+50G/時 ➔ <span style="color: var(--success)">+100G/時</span></span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted)">必要資金</span>
+            <span class="cost-text">8,000 pt</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="text-btn" onclick="document.getElementById('upgrade-modal').style.display='none'">キャンセル</button>
+        <button class="submit-btn" onclick="document.getElementById('upgrade-modal').style.display='none'; console.log('強化しました（ダミー）')">強化する</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mock-note">DESIGN MOCK</div>
+
+</body>
+</html>

@@ -6,6 +6,7 @@ import { charCost } from '../utils/cost'
 import { calcMapl, calcTul } from '../utils/kaisyo'
 import { customizeSafeThreshold } from '../utils/traitEffects'
 import { tokusyuDisplayName } from '../utils/tokusyuEffects'
+import { recordUnitObtained } from '../utils/unitStats'
 
 type Bindings = {
   DB: D1Database
@@ -199,6 +200,8 @@ authApp.post('/register', zValidator('json', registerSchema), async (c) => {
     await c.env.DB.prepare(
       `INSERT INTO hangars (user_id, unit_id) VALUES (?, ?)`
     ).bind(id, initialUnitId).run()
+
+    await recordUnitObtained(c.env.DB, id, initialUnitId)
 
     // 登録した時点でログイン済みにする。
     // 以前はここでトークンを返さず、フロントがログイン画面へ送り返していた。

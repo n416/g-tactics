@@ -1,0 +1,626 @@
+<title>G-Tactics 基地モック — 機体博物館</title>
+<style>
+  /* ============================================================
+   * G-Tactics 基地・機体博物館 デザインモック
+   * 配色はゲーム本体 frontend/src/index.css のトークンに準拠。
+   * 博物館ホールのみ、展示照明として金色 (--museum-gold) を追加。
+   * ゲーム本体がダーク固定のため、このモックも単一テーマ。
+   * ============================================================ */
+  :root {
+    --bg-color: #0f172a;
+    --bg-raised: #16213a;
+    --panel-bg: #1e293b;
+    --panel-inset: rgba(0, 0, 0, 0.25);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border-color: #334155;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --accent-color: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-cyan: #4facfe;
+    --success: #4bff7d;
+    --warning: #ecc94b;
+    --danger: #ef4444;
+    --radius: 4px;
+    --radius-lg: 8px;
+    --museum-gold: #d8b25a;
+    --museum-gold-dim: rgba(216, 178, 90, 0.35);
+    --hall-bg: #0a0f1f;
+    --serif: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", Georgia, serif;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, Helvetica, Arial, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+  * { box-sizing: border-box; }
+  img { max-width: 100%; }
+
+  /* ---------- アプリバー（本体の AppLayout を模したダミー） ---------- */
+  .appbar {
+    height: 56px;
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0 1.25rem;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .appbar .logo {
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: var(--accent-cyan);
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+  .appbar nav { display: flex; gap: 1.1rem; overflow-x: auto; }
+  .appbar nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    padding: 0.2rem 0;
+  }
+  .appbar nav a.active {
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--accent-cyan);
+  }
+  .appbar .money {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: var(--warning);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* ---------- 基地ヘッダー ---------- */
+  .base-head {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .base-head h1 {
+    font-size: 1.35rem;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .chip.terrain { color: var(--accent-cyan); border-color: rgba(79, 172, 254, 0.4); }
+  .chip.income  { color: var(--success); border-color: rgba(75, 255, 125, 0.3); }
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .base-head .defense-log {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  .base-head .defense-log a { color: var(--accent-cyan); }
+
+  /* ---------- 施設ストリップ ---------- */
+  .facilities {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+  .facility {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 0.8rem 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .facility:hover { border-color: var(--text-muted); }
+  .facility .f-name { font-size: 0.9rem; font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; }
+  .facility .f-lv { font-size: 0.7rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .facility .f-effect { font-size: 0.74rem; color: var(--text-secondary); line-height: 1.45; }
+  .facility.active {
+    border-color: var(--museum-gold);
+    background: linear-gradient(180deg, rgba(216, 178, 90, 0.09), var(--panel-bg) 60%);
+  }
+  .facility.active .f-lv { color: var(--museum-gold); }
+  .facility.locked { opacity: 0.55; }
+  .facility.locked .f-effect { color: var(--text-muted); }
+
+  /* ---------- 博物館ホール ---------- */
+  .hall {
+    background:
+      radial-gradient(ellipse 120% 60% at 50% -10%, rgba(216, 178, 90, 0.07), transparent 60%),
+      var(--hall-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .hall-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 1rem;
+  }
+  .hall-head h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.45rem;
+    margin: 0;
+    color: var(--museum-gold);
+    letter-spacing: 0.12em;
+  }
+  .hall-head .hall-sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .hall-head .collection {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 200px;
+  }
+  .collection .col-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+    font-variant-numeric: tabular-nums;
+  }
+  .collection .col-label strong { color: var(--text-primary); }
+  .col-bar {
+    height: 5px;
+    background: var(--panel-inset);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .col-bar span {
+    display: block;
+    height: 100%;
+    width: 3.7%;
+    min-width: 8px;
+    background: linear-gradient(90deg, var(--museum-gold), #f0d79a);
+    border-radius: 999px;
+  }
+
+  /* ---------- 殿堂（目玉展示） ---------- */
+  .featured {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: stretch;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+  }
+  .featured .stage {
+    flex: 0 0 260px;
+    min-height: 300px;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    margin: 0 auto;
+  }
+  .stage .spotlight {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 55% 75% at 50% 20%, rgba(216, 178, 90, 0.18), transparent 70%);
+    pointer-events: none;
+  }
+  .stage img {
+    position: relative;
+    z-index: 1;
+    height: 230px;
+    filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.6));
+  }
+  .stage .pedestal {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 78%;
+    height: 22px;
+    background: linear-gradient(180deg, #2a3550, #131b30);
+    border: 1px solid var(--border-color);
+    border-radius: 3px 3px 6px 6px;
+  }
+  .featured .plaque-main { flex: 1 1 300px; display: flex; flex-direction: column; gap: 0.7rem; justify-content: center; }
+  .exhibit-tag {
+    font-size: 0.68rem;
+    letter-spacing: 0.28em;
+    color: var(--museum-gold);
+    text-transform: uppercase;
+  }
+  .plaque-main h3 {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  .plaque-main h3 small {
+    display: block;
+    font-family: inherit;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.15rem;
+  }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 0.6rem 1.5rem; }
+  .stat { display: flex; flex-direction: column; gap: 0.1rem; }
+  .stat .k { font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.14em; }
+  .stat .v { font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat .v em { font-style: normal; font-size: 0.72rem; color: var(--text-muted); font-weight: 400; margin-left: 2px; }
+  .stat .v.gold { color: var(--museum-gold); }
+  .owner-note {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    border-left: 2px solid var(--museum-gold-dim);
+    padding-left: 0.8rem;
+    max-width: 46ch;
+  }
+  .owner-note .by { color: var(--text-muted); font-size: 0.72rem; }
+
+  /* ---------- 展示グリッド ---------- */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 1rem;
+  }
+  .exhibit {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 55%);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1rem 0.75rem 0;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.18s, border-color 0.18s;
+    overflow: hidden;
+  }
+  .exhibit:hover { transform: translateY(-3px); border-color: var(--museum-gold-dim); }
+  @media (prefers-reduced-motion: reduce) {
+    .exhibit, .exhibit:hover { transform: none; transition: none; }
+  }
+  .exhibit.wide { grid-column: span 2; }
+  .exhibit .light {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 65%;
+    background: radial-gradient(ellipse 60% 90% at 50% 0%, rgba(216, 178, 90, 0.12), transparent 70%);
+    pointer-events: none;
+  }
+  .exhibit .body {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 0.35rem;
+    min-height: 150px;
+    position: relative;
+  }
+  .exhibit .body img {
+    height: 130px;
+    filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.55));
+  }
+  .exhibit.wide .body img { height: 140px; }
+  .exhibit .base-slab {
+    height: 10px;
+    background: linear-gradient(180deg, #26304a, #131b30);
+    border-top: 1px solid var(--border-color);
+    margin: 0 -0.75rem;
+  }
+  .plaque {
+    background: #10182c;
+    margin: 0 -0.75rem;
+    padding: 0.6rem 0.8rem 0.7rem;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .plaque .model { font-size: 0.64rem; color: var(--text-muted); letter-spacing: 0.12em; }
+  .plaque .name {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+  .plaque .meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+  .plaque .meta .count { color: var(--museum-gold); font-weight: 700; }
+
+  /* 未収蔵スロット */
+  .exhibit.empty { border-style: dashed; border-color: var(--border-color); background: none; }
+  .exhibit.empty .body { align-items: center; }
+  .exhibit.empty .q {
+    font-family: var(--serif);
+    font-size: 2.4rem;
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
+  .exhibit.empty .plaque { background: transparent; }
+  .exhibit.empty .plaque .name { color: var(--text-muted); }
+
+  /* ---------- 見学者ノート ---------- */
+  .guestbook {
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .guestbook h4 {
+    margin: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .guest {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+  }
+  .guest .g-name { color: var(--accent-cyan); white-space: nowrap; }
+  .guest .g-date { color: var(--text-muted); font-size: 0.7rem; white-space: nowrap; margin-left: auto; }
+
+  /* ---------- モック注記 ---------- */
+  .mock-note {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    background: var(--panel-bg);
+    border-radius: 999px;
+    padding: 0.25rem 0.7rem;
+    z-index: 30;
+  }
+
+  @media (max-width: 560px) {
+    .exhibit.wide { grid-column: span 1; }
+    .exhibit.wide .body img { height: 110px; max-width: 100%; object-fit: contain; }
+    .base-head .defense-log { margin-left: 0; }
+    .hall { padding: 1rem 0.9rem 1.5rem; }
+  }
+</style>
+
+<header class="appbar">
+  <span class="logo">G-TACTICS</span>
+  <nav>
+    <a href="#">マイページ</a>
+    <a href="#">格納庫</a>
+    <a href="#" class="active">基地</a>
+    <a href="#">戦闘</a>
+    <a href="#">大会</a>
+    <a href="#">派閥</a>
+  </nav>
+  <span class="money">所持金 48,200G</span>
+</header>
+
+<div class="page">
+
+  <section class="base-head">
+    <h1>グラナダ第3基地</h1>
+    <span class="chip terrain"><span class="dot"></span>宇宙域</span>
+    <span class="chip income">資金 +120G / 時</span>
+    <span class="defense-log">昨夜 1 件の襲撃 — <strong style="color:var(--success)">防衛成功</strong>（<a href="#">リプレイを見る</a>）</span>
+  </section>
+
+  <section class="facilities">
+    <div class="facility">
+      <div class="f-name">発電所 <span class="f-lv">Lv 3</span></div>
+      <div class="f-effect">資金 +120G/時。次Lv: +150G/時（12,000G）</div>
+    </div>
+    <div class="facility">
+      <div class="f-name">修理ドック <span class="f-lv">Lv 2</span></div>
+      <div class="f-effect">戦闘後の耐久回復 2.0倍速</div>
+    </div>
+    <div class="facility">
+      <div class="f-name">砲台 <span class="f-lv">Lv 1</span></div>
+      <div class="f-effect">防衛戦で開幕に迎撃射撃 1 回</div>
+    </div>
+    <div class="facility active">
+      <div class="f-name">博物館 <span class="f-lv">Lv 2</span></div>
+      <div class="f-effect">展示 12 枠。見学者を受け入れ可能</div>
+    </div>
+    <div class="facility locked">
+      <div class="f-name">工場 <span class="f-lv">未建設</span></div>
+      <div class="f-effect">建設 8,000G — ショップ購入 5% 割引</div>
+    </div>
+  </section>
+
+  <section class="hall">
+    <div class="hall-head">
+      <h2>機体博物館</h2>
+      <span class="hall-sub">Granada Base Museum</span>
+      <div class="collection">
+        <span class="col-label"><span>収蔵図鑑</span><span><strong>34</strong> / 911 機</span></span>
+        <div class="col-bar"><span></span></div>
+      </div>
+    </div>
+
+    <div class="featured">
+      <div class="stage">
+        <div class="spotlight"></div>
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAADcCAYAAAD+xArtAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8 ...[TRUNCATED len=64748]
+        <div class="pedestal"></div>
+      </div>
+      <div class="plaque-main">
+        <span class="exhibit-tag">殿堂展示 — 館長のお気に入り</span>
+        <h3><small>MSN-04</small>サザビー</h3>
+        <div class="stat-row">
+          <div class="stat"><span class="k">入手回数</span><span class="v gold">5<em>回</em></span></div>
+          <div class="stat"><span class="k">初入手</span><span class="v">2026.05.12</span></div>
+          <div class="stat"><span class="k">総撃墜</span><span class="v">41<em>機</em></span></div>
+          <div class="stat"><span class="k">最高連勝</span><span class="v">9</span></div>
+        </div>
+        <p class="owner-note">
+          初めて優勝戦を勝ち抜いたときの搭乗機。5回買い直してでも手元に置きたかった。
+          <span class="by">— 館長コメント（編集可）</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="gallery">
+      <div class="exhibit">
+        <div class="light"></div>
+        <div class="body"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAADcCAYAAAD+xArtAAAAAXNSR0IArs4c6Q ...[TRUNCATED len=75397]
+        <div class="base-slab"></div>
+        <div class="plaque">
+          <span class="model">RX-78-2</span>
+          <span class="name">ガンダム</span>
+          <span class="meta"><span>撃墜 18</span><span class="count">入手 ×2</span></span>
+        </div>
+      </div>
+      <div class="exhibit">
+        <div class="light"></div>
+        <div class="body"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAADcCAYAAAD+xArtAAAAAXNSR0IArs4c6Q ...[TRUNCATED len=75371]
+        <div class="base-slab"></div>
+        <div class="plaque">
+          <span class="model">MS-06S</span>
+          <span class="name">シャア専用ザクII</span>
+          <span class="meta"><span>撃墜 27</span><span class="count">入手 ×4</span></span>
+        </div>
+      </div>
+      <div class="exhibit">
+        <div class="light"></div>
+        <div class="body"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAADcCAYAAAD+xArtAAAAAXNSR0IArs4c6Q ...[TRUNCATED len=81023]
+        <div class="base-slab"></div>
+        <div class="plaque">
+          <span class="model">MSZ-006</span>
+          <span class="name">Ζガンダム</span>
+          <span class="meta"><span>撃墜 6</span><span class="count">入手 ×1</span></span>
+        </div>
+      </div>
+      <div class="exhibit">
+        <div class="light"></div>
+        <div class="body"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAADcCAYAAAD+xArtAAAAAXNSR0IArs4c6Q ...[TRUNCATED len=58097]
+        <div class="base-slab"></div>
+        <div class="plaque">
+          <span class="model">RX-93</span>
+          <span class="name">νガンダム</span>
+          <span class="meta"><span>撃墜 3</span><span class="count">入手 ×1</span></span>
+        </div>
+      </div>
+      <div class="exhibit">
+        <div class="light"></div>
+        <div class="body"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAADcCAYAAAD+xArtAAAAAXNSR0IArs4c6Q ...[TRUNCATED len=73896]
+        <div class="base-slab"></div>
+        <div class="plaque">
+          <span class="model">MSM-07</span>
+          <span class="name">ズゴック</span>
+          <span class="meta"><span>撃墜 12</span><span class="count">入手 ×3</span></span>
+        </div>
+      </div>
+      <div class="exhibit">
+        <div class="light"></div>
+        <div class="body"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAADcCAYAAAD+xArtAAAAAXNSR0IArs4c6Q ...[TRUNCATED len=74384]
+        <div class="base-slab"></div>
+        <div class="plaque">
+          <span class="model">MSN-02</span>
+          <span class="name">ジオング</span>
+          <span class="meta"><span>撃墜 9</span><span class="count">入手 ×2</span></span>
+        </div>
+      </div>
+      <div class="exhibit wide">
+        <div class="light"></div>
+        <div class="body"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAYoAAADcCAYAAABu3uZOAAAAAXNSR0IArs4c6Q ...[TRUNCATED len=135426]
+        <div class="base-slab"></div>
+        <div class="plaque">
+          <span class="model">MA-08</span>
+          <span class="name">ビグ・ザム</span>
+          <span class="meta"><span>撃墜 15 — 大型展示ホール（Lv2 で解放）</span><span class="count">入手 ×1</span></span>
+        </div>
+      </div>
+      <div class="exhibit empty">
+        <div class="body"><span class="q">？</span></div>
+        <div class="base-slab"></div>
+        <div class="plaque">
+          <span class="model">— 未収蔵 —</span>
+          <span class="name">空き展示台</span>
+          <span class="meta"><span>機体を入手すると自動で図鑑に登録</span></span>
+        </div>
+      </div>
+      <div class="exhibit empty">
+        <div class="body"><span class="q">？</span></div>
+        <div class="base-slab"></div>
+        <div class="plaque">
+          <span class="model">— 未収蔵 —</span>
+          <span class="name">空き展示台</span>
+          <span class="meta"><span>展示枠は博物館Lvで拡張</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="guestbook">
+      <h4>見学者ノート</h4>
+      <div class="guest">
+        <span class="g-name">アムロ・レイ2世</span>
+        <span>サザビー5回買うのは草。ビグ・ザム展示うらやましい…</span>
+        <span class="g-date">7/19 23:41</span>
+      </div>
+      <div class="guest">
+        <span class="g-name">砂漠の虎</span>
+        <span>ズゴック×3は水中適性ガチ勢すぎる。今度うちの基地にも来てください</span>
+        <span class="g-date">7/18 20:05</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<span class="mock-note">DESIGN MOCK — 数値・機体はダミー</span>

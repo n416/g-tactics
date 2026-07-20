@@ -632,7 +632,7 @@ export const MyPage: React.FC = () => {
           <div className="stats-allocation" style={{ margin: 0 }}>
             <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#aaa', fontSize: '0.9rem', textAlign: 'center' }}>【 戦闘メニュー 】</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-              <button onClick={() => navigate('/battle')} className="submit-btn" style={{ padding: '12px 15px', margin: 0, fontSize: '1rem', fontWeight: 'bold', width: '100%' }}>出撃 (優勝戦・防衛戦)</button>
+              <button onClick={() => navigate('/battle')} className="submit-btn" style={{ padding: '12px 15px', margin: 0, fontSize: '1rem', fontWeight: 'bold', width: '100%' }}>出撃 (優勝戦・個別戦)</button>
               <button onClick={() => navigate('/simulator')} className="submit-btn" style={{ padding: '8px 15px', margin: 0, fontSize: '0.8rem', background: '#2c5282', width: '100%' }}>シミュレーターへ移動</button>
             </div>
             <div style={{ marginTop: '10px', textAlign: 'center', fontSize: '0.8rem', color: '#888' }}>

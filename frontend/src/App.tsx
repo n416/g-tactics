@@ -7,6 +7,7 @@ import { Training } from './pages/Training'
 import { Anaheim } from './pages/Anaheim'
 import { Tactics } from './pages/Tactics'
 import { Hangar } from './pages/Hangar'
+import { Base } from './pages/Base'
 import { Ranking } from './pages/Ranking'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
@@ -26,6 +27,8 @@ import { BBS } from './pages/BBS'
 import { Simulator } from './pages/Simulator'
 import Trade from './pages/Trade'
 import Battle from './pages/Battle'
+import { Museum } from './pages/Museum'
+import { Replay } from './pages/Replay'
 import { AppLayout } from './components/AppLayout'
 import { ToastHost } from './components/ToastHost'
 import { ConfirmHost } from './components/ConfirmHost'
@@ -51,6 +54,7 @@ function App() {
         <Route path="/training" element={<Training />} />
         <Route path="/anaheim" element={<Anaheim />} />
         <Route path="/hangar" element={<Hangar />} />
+        <Route path="/base" element={<Base />} />
         <Route path="/battle" element={<Battle />} />
         <Route path="/tactics" element={<Tactics />} />
         <Route path="/ranking" element={<Ranking />} />
@@ -72,6 +76,9 @@ function App() {
         <Route path="/bbs" element={<BBS />} />
         <Route path="/simulator" element={<Simulator />} />
         <Route path="/trade" element={<Trade />} />
+        <Route path="/museum" element={<Museum />} />
+        <Route path="/museum/:userId" element={<Museum />} />
+        <Route path="/replay/:id" element={<Replay />} />
       </Route>
     </Routes>
     </>

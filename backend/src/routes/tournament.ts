@@ -4,6 +4,7 @@ import { simulateBattleRound, simulateTeamBattle, getFullCharacter, calcMaxHp, c
 import { charCost } from '../utils/cost'
 import { calcRankIndex } from '../utils/battleRewards'
 import { postNews } from '../utils/news'
+import { recordUnitBattleResult } from '../utils/unitStats'
 
 type Bindings = {
   DB: any
@@ -466,11 +467,15 @@ tournamentApp.post('/:id/execute', async (c) => {
       const losers = res.isSuccess ? team2 : team1
 
       for (const f of [...team1, ...team2]) await saveFighter(f)
-      for (const f of losers) await markLoser(f.id)
+      for (const f of losers) {
+        await markLoser(f.id)
+        await recordUnitBattleResult(c.env.DB, { userId: f.id, unitId: f.unit_id, isWin: false })
+      }
       // 勝利陣営全員に名声1（撃破されたキャラを含む＝manual準拠）＋賞金を均等分配
       const share = Math.floor((tournament.prize_money || 0) / winners.length)
       for (const f of winners) {
         await addFame(f.id, 1)
+        await recordUnitBattleResult(c.env.DB, { userId: f.id, unitId: f.unit_id, isWin: true })
         if (share > 0 && !isNpcId(f.id)) {
           await c.env.DB.prepare(`UPDATE characters SET money = money + ? WHERE id = ?`).bind(share, f.id).run()
         }
@@ -501,12 +506,16 @@ tournamentApp.post('/:id/execute', async (c) => {
         if (fb.hp <= 0) {
           await addFame(fa.id, 1) // 1人倒すごとに名声1
           await recordBattleStats(fa.id, fb.id)
+          await recordUnitBattleResult(c.env.DB, { userId: fa.id, unitId: fa.unit_id, isWin: true })
+          await recordUnitBattleResult(c.env.DB, { userId: fb.id, unitId: fb.unit_id, isWin: false })
           await markLoser(fb.id)
           await saveMatch(seq++, 0, fa, fb, fa.id, r.events)
         }
         if (fa.hp <= 0) {
           await addFame(fb.id, 1)
           await recordBattleStats(fb.id, fa.id)
+          await recordUnitBattleResult(c.env.DB, { userId: fb.id, unitId: fb.unit_id, isWin: true })
+          await recordUnitBattleResult(c.env.DB, { userId: fa.id, unitId: fa.unit_id, isWin: false })
           await markLoser(fa.id)
           await saveMatch(seq++, 0, fb, fa, fb.id, r.events)
         }
@@ -566,6 +575,8 @@ tournamentApp.post('/:id/execute', async (c) => {
           await markLoser(loserId)
           await recordBattleStats(winnerId, loserId)
           await addFame(winnerId, 1) // 1勝するごとに名声1（manual準拠）
+          await recordUnitBattleResult(c.env.DB, { userId: winnerId, unitId: winnerId === f1.id ? f1.unit_id : f2.unit_id, isWin: true })
+          await recordUnitBattleResult(c.env.DB, { userId: loserId, unitId: loserId === f1.id ? f1.unit_id : f2.unit_id, isWin: false })
 
           nextRound.push(winnerId)
         }

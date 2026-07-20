@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>G-Tactics リプレイモック</title>
+<style>
+/* ====== デザイントークン ====== */
+:root {
+  --bg-color: #0f172a;
+  --bg-raised: #16213a;
+  --panel-bg: #1e293b;
+  --panel-inset: rgba(0, 0, 0, 0.25);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-color: #334155;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-cyan: #4facfe;
+  --success: #4bff7d;
+  --warning: #ecc94b;
+  --danger: #ef4444;
+  --radius: 4px;
+  --radius-lg: 8px;
+  --serif: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", Georgia, serif;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-primary);
+  margin: 0; padding: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+
+h2 { margin-top: 0; font-size: 1.35rem; color: var(--text-primary); }
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ====== 防衛サマリ（緊急警報風） ====== */
+.defense-alert-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+}
+
+.alert-header {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+  padding: 0.75rem 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.blink-red {
+  animation: blinkRed 2s infinite;
+}
+@keyframes blinkRed {
+  0%, 100% { background: rgba(239, 68, 68, 0.15); }
+  50% { background: rgba(239, 68, 68, 0.3); }
+}
+
+.alert-body {
+  padding: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.alert-stats {
+  display: flex;
+  gap: 2rem;
+}
+.alert-stats .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.stat span {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.stat strong {
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.stat strong.success { color: var(--success); }
+.stat strong.danger { color: var(--danger); }
+
+/* ====== 防衛履歴カード一覧 ====== */
+.history-section {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+}
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+.history-card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 0.2s, border-color 0.2s;
+  overflow: hidden;
+}
+.history-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-color);
+}
+.history-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 4px; height: 100%;
+}
+.history-card.win::before { background: var(--success); }
+.history-card.lose::before { background: var(--danger); }
+
+.card-badge {
+  position: absolute;
+  top: 1rem; right: -2rem;
+  transform: rotate(45deg);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 2px 2.5rem;
+  color: #000;
+}
+.win-badge { background: var(--success); }
+.lose-badge { background: var(--danger); color: #fff;}
+
+.card-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+.card-attacker {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.dummy-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #334155, #1e293b);
+  border: 1px solid var(--border-color);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; color: var(--text-muted);
+}
+.attacker-info .a-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+.attacker-info .a-unit {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.card-action {
+  margin-top: auto;
+}
+.cyber-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cyber-btn:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+.cyber-btn:disabled {
+  border-color: var(--border-color);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  background: transparent;
+}
+
+
+/* ====== リプレイ画面（実アプリ完全再現） ====== */
+.replay-container {
+  position: relative;
+  width: 100%;
+  height: 650px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+/* BattleAnimation.css 移植 */
+.battle-stage-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.battle-message-area {
+  height: 32%;
+  min-height: 180px;
+  flex-shrink: 0;
+  position: relative;
+  background: #0b1021;
+  border-top: 1px solid var(--border-color);
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 地形背景ダミー (terrain-1 地上風) */
+.battle-stage-bg {
+  position: absolute;
+  inset: 0;
+  background: url('assets/battle-bg-space.jpg') center/cover no-repeat;
+}
+.battle-bg-band {
+  position: absolute; left: 0; width: 200%; pointer-events: none;
+  animation: bandDrift 10s linear infinite;
+}
+.band-1 { bottom: 0; height: 30%; background: linear-gradient(90deg, rgba(0,0,0,0.05) 50%, transparent 50%); background-size: 100px 100%; }
+.band-2 { bottom: 10%; height: 20%; background: linear-gradient(90deg, rgba(0,0,0,0.03) 50%, transparent 50%); background-size: 150px 100%; animation-duration: 20s;}
+@keyframes bandDrift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* 機体 */
+.stage-unit {
+  position: absolute;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+  image-rendering: pixelated;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+.stage-attacker { left: 15%; bottom: 6%; transform: scaleX(-1); }
+.stage-defender { right: 15%; bottom: 6%; }
+
+/* モック用アセット画像（ダミー機体と砲台） */
+.mock-unit-img {
+  max-height: 25vh; /* BattleAnimation.css に準拠 */
+  width: auto;
+  max-width: 200px;
+}
+.mock-turret-img {
+  max-height: 120px;
+  width: auto;
+  margin-right: -20px;
+}
+
+/* ダメージ表示・エフェクト */
+.damage-flash {
+  position: absolute; top: -20%; left: 50%; transform: translate(-50%, 0);
+  font-size: 2.2rem; font-weight: 800; pointer-events: none;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8); white-space: nowrap;
+}
+.damage-flash.hit { color: #ef4444; }
+.damage-flash.evade { color: #f59e0b; }
+
+.explosion-effect {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 150px; height: 150px;
+  background: radial-gradient(circle, #fff 10%, #fbbf24 30%, #ef4444 60%, transparent 80%);
+  border-radius: 50%; pointer-events: none; z-index: 100; opacity: 0.8;
+}
+
+/* 吹き出し */
+.on-stage-quote {
+  position: absolute; top: -60px;
+  background: rgba(255, 255, 255, 0.95); color: #0f172a;
+  padding: 8px 14px; border-radius: 16px; font-weight: bold; font-size: 0.95rem;
+  white-space: nowrap; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  z-index: 50;
+  /* 攻撃側の吹き出しを反転解除 */
+  transform: scaleX(-1);
+}
+.on-stage-quote::after {
+  content: ''; position: absolute; bottom: -6px; width: 0; height: 0;
+  border-left: 6px solid transparent; border-right: 6px solid transparent;
+  border-top: 6px solid rgba(255, 255, 255, 0.95);
+}
+.on-stage-quote-attacker { left: 50%; margin-left: -50px; border: 2px solid #3b82f6; }
+.on-stage-quote-attacker::after { left: 20%; border-top-color: #3b82f6; }
+.on-stage-quote-defender { right: 50%; transform: translateX(30%); border: 2px solid #ef4444; }
+.on-stage-quote-defender::after { right: 20%; border-top-color: #ef4444; }
+
+/* ステータスプレート */
+.status-plate {
+  position: absolute; top: 14px; width: 220px; padding: 10px 14px;
+  background: rgba(15, 23, 42, 0.82); border: 1px solid var(--border-color);
+  border-radius: var(--radius); backdrop-filter: blur(4px); color: var(--text-primary);
+}
+.plate-attacker { left: 14px; border-left: 4px solid #3b82f6; }
+.plate-defender { right: 14px; border-right: 4px solid #ef4444; text-align: right; }
+.plate-pilot { font-size: 1.05rem; font-weight: 700; }
+.plate-unit { font-size: 0.85rem; color: #22c55e; margin-bottom: 0.5rem; font-weight: 500; }
+.plate-row { color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; margin: 0.35rem 0 0.15rem; }
+.hp-bar-track { width: 100%; height: 8px; background: rgba(0, 0, 0, 0.35); border-radius: 4px; overflow: hidden; }
+.hp-bar-fill { height: 100%; }
+.attacker-hp { background: #3b82f6; }
+.defender-hp { background: #ef4444; }
+.en-bar { background: #10b981; }
+
+/* 距離チップ */
+.distance-chip {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 18px; background: rgba(15, 23, 42, 0.82); border: 1px solid var(--border-color);
+  border-radius: var(--radius); backdrop-filter: blur(4px);
+}
+.distance-label { font-size: 0.65rem; color: var(--text-secondary); letter-spacing: 1px; font-weight: 600; }
+.dist-val { font-size: 1rem; font-weight: 700; white-space: nowrap; }
+.dist-2 { color: #f59e0b; }
+
+/* HUD風再生コントロール（追加） */
+.replay-hud-controls {
+  position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 0.5rem;
+  background: rgba(15, 23, 42, 0.82); padding: 0.5rem 1rem; border-radius: 999px;
+  border: 1px solid var(--border-color); backdrop-filter: blur(4px);
+}
+.replay-hud-btn {
+  background: transparent; border: none; color: #fff; cursor: pointer; font-size: 1.2rem;
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; transition: background 0.2s;
+}
+.replay-hud-btn:hover { background: rgba(255,255,255,0.1); color: var(--accent-cyan); }
+.replay-hud-speed {
+  font-size: 0.85rem; font-weight: bold; font-family: monospace;
+}
+
+/* メッセージウィンドウ */
+.battle-message-window {
+  width: 100%; max-width: 680px; height: 100%; background: #0f172a;
+  border: 1px solid var(--border-color); border-radius: var(--radius);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.message-window-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 14px; border-bottom: 1px solid var(--border-color);
+}
+.cyber-title { font-size: 0.85rem; letter-spacing: 1px; font-weight: 700; }
+.controls { display: flex; gap: 0.5rem; }
+.control-btn {
+  background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary);
+  padding: 0.35rem 0.8rem; border-radius: var(--radius); cursor: pointer; font-size: 0.8rem;
+  transition: all 0.2s; font-weight: 500;
+}
+.control-btn:hover { background: var(--border-color); }
+.control-btn.skip-all { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444; }
+
+.message-log-container {
+  padding: 0.9rem 1.2rem; flex: 1; overflow-y: auto; color: var(--text-primary);
+  font-size: 0.9rem; line-height: 1.55;
+}
+.log-entry { margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(51, 65, 85, 0.6); }
+.log-entry:last-child { border-bottom: none; }
+
+.chat-message { display: flex; flex-direction: column; margin: 12px 0; width: 100%; }
+.chat-attacker { align-items: flex-start; }
+.chat-defender { align-items: flex-end; }
+.chat-name { font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; font-weight: bold; }
+.chat-bubble {
+  max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 1.05rem; font-weight: bold;
+  color: #fff; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); letter-spacing: 0.5px;
+}
+.chat-attacker .chat-bubble { background: #1e3a8a; border-bottom-left-radius: 2px; border: 1px solid rgba(59, 130, 246, 0.4); }
+.chat-defender .chat-bubble { background: #9f1239; border-bottom-right-radius: 2px; border: 1px solid rgba(225, 29, 72, 0.4); }
+
+.private-note {
+  font-size: 0.8rem; color: var(--text-muted); text-align: right; margin-top: 0.5rem;
+}
+</style>
+</head>
+<body>
+  <div class="container">
+    <h2 style="font-family: var(--serif); color: var(--museum-gold);">防衛戦連携・リプレイ画面（モック改）</h2>
+
+    <!-- 防衛サマリ -->
+    <section class="defense-alert-panel">
+      <div class="alert-header blink-red">
+        ⚠ DEFENSE ALERT: BASE ATTACKED
+      </div>
+      <div class="alert-body">
+        <div class="alert-stats">
+          <div class="stat"><span>襲撃数</span><strong>3</strong></div>
+          <div class="stat"><span>防衛成功</span><strong class="success">2</strong></div>
+          <div class="stat"><span>防衛失敗</span><strong class="danger">1</strong></div>
+        </div>
+        <div class="alert-message" style="color: var(--text-secondary); font-size: 0.9rem;">
+          過去24時間に基地が襲撃されました。詳細は防衛履歴から確認してください。
+        </div>
+      </div>
+    </section>
+
+    <!-- 防衛履歴一覧 -->
+    <section class="history-section">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0;">防衛履歴一覧</h3>
+        <span class="private-note">※ リプレイは当事者のみ再生可能</span>
+      </div>
+      
+      <div class="history-grid">
+        <!-- カード1：防衛失敗 -->
+        <div class="history-card lose">
+          <div class="card-badge lose-badge">DEFEATED</div>
+          <div class="card-date">2026.07.20 18:30</div>
+          <div class="card-attacker">
+            <div class="dummy-avatar">AMURO</div>
+            <div class="attacker-info">
+              <div class="a-name">アムロ・レイ</div>
+              <div class="a-unit">RX-78-2 ガンダム</div>
+            </div>
+          </div>
+          <div class="card-action">
+            <button class="cyber-btn">REPLAY WATCH</button>
+          </div>
+        </div>
+
+        <!-- カード2：防衛成功 -->
+        <div class="history-card win">
+          <div class="card-badge win-badge">SUCCESS</div>
+          <div class="card-date">2026.07.19 12:45</div>
+          <div class="card-attacker">
+            <div class="dummy-avatar">CHAR</div>
+            <div class="attacker-info">
+              <div class="a-name">シャア・アズナブル</div>
+              <div class="a-unit">MS-06S ザクII</div>
+            </div>
+          </div>
+          <div class="card-action">
+            <button class="cyber-btn">REPLAY WATCH</button>
+          </div>
+        </div>
+
+        <!-- カード3：期限切れ -->
+        <div class="history-card win">
+          <div class="card-badge win-badge">SUCCESS</div>
+          <div class="card-date">2026.07.01 08:20</div>
+          <div class="card-attacker">
+            <div class="dummy-avatar">SOLDIER</div>
+            <div class="attacker-info">
+              <div class="a-name">名無し兵</div>
+              <div class="a-unit">RGM-79 ジム</div>
+            </div>
+          </div>
+          <div class="card-action">
+            <button class="cyber-btn" disabled>DATA EXPIRED</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- リプレイ画面 (BattleAnimation再現) -->
+    <section class="replay-container">
+      <div class="battle-stage-area terrain-1">
+        <div class="battle-stage-bg"></div>
+        <div class="battle-bg-band band-1"></div>
+        <div class="battle-bg-band band-2"></div>
+
+        <!-- 攻撃側 -->
+        <div class="stage-unit stage-attacker">
+          <div class="on-stage-quote on-stage-quote-attacker">そこだっ！</div>
+          <img src="assets/attacker-mech.png" alt="Attacker" class="mock-unit-img">
+        </div>
+
+        <!-- 防御側 (砲台迎撃被弾時) -->
+        <div class="stage-unit stage-defender" style="flex-direction: row; align-items: flex-end;">
+          <div class="explosion-effect" style="left:20%;"></div>
+          <div class="damage-flash hit" style="font-size:1.8rem">-120 (砲台迎撃)</div>
+          <img src="assets/turret.png" alt="Turret" class="mock-turret-img">
+          <img src="assets/defense-mech.png" alt="Defender" class="mock-unit-img">
+        </div>
+
+        <!-- HUD: 攻撃側 -->
+        <div class="status-plate plate-attacker">
+          <div class="plate-pilot">アムロ・レイ</div>
+          <div class="plate-unit">RX-78-2 ガンダム</div>
+          <div class="plate-row">HP 350 / 500</div>
+          <div class="hp-bar-track"><div class="hp-bar-fill attacker-hp" style="width: 70%"></div></div>
+          <div class="plate-row">EN 40 / 100</div>
+          <div class="hp-bar-track"><div class="hp-bar-fill en-bar" style="width: 40%"></div></div>
+          <div class="plate-row">AMMO 8</div>
+        </div>
+
+        <!-- HUD: 防御側 -->
+        <div class="status-plate plate-defender">
+          <div class="plate-pilot">防衛システム</div>
+          <div class="plate-unit">MS-06S ザクII</div>
+          <div class="plate-row">HP 680 / 800</div>
+          <div class="hp-bar-track"><div class="hp-bar-fill defender-hp" style="width: 85%"></div></div>
+          <div class="plate-row">EN 90 / 120</div>
+          <div class="hp-bar-track"><div class="hp-bar-fill en-bar" style="width: 75%"></div></div>
+          <div class="plate-row">AMMO 12</div>
+        </div>
+
+        <div class="distance-chip">
+          <span class="distance-label">ENGAGEMENT</span>
+          <span class="dist-val dist-2">🎯 MID RANGE (中距離: 50)</span>
+        </div>
+
+        <!-- HUD風再生コントロール -->
+        <div class="replay-hud-controls">
+          <button class="replay-hud-btn">⏮</button>
+          <button class="replay-hud-btn">⏯</button>
+          <button class="replay-hud-btn replay-hud-speed">x1.0</button>
+          <button class="replay-hud-btn">⏭</button>
+        </div>
+      </div>
+
+      <div class="battle-message-area">
+        <div class="battle-message-window">
+          <div class="message-window-header">
+            <span class="cyber-title">COMBAT SIMULATION REPLAY</span>
+            <div class="controls">
+              <button class="control-btn">⏮ RESTART</button>
+              <button class="control-btn skip-all">⏩ SKIP</button>
+            </div>
+          </div>
+          <div class="message-log-container">
+            <div class="log-entry">
+              <div style="color:var(--warning); font-weight:bold;">[Turn 0] 基地防衛システムの先制攻撃！</div>
+              <div>砲台(Lv3)による迎撃射撃。</div>
+              <div>アムロ・レイに 120 のダメージ！</div>
+            </div>
+            
+            <div class="log-entry">
+              <div>[Turn 1] アムロ・レイの攻撃！</div>
+              <div>ビームライフルによる射撃。</div>
+            </div>
+            <div class="chat-message chat-attacker">
+              <div class="chat-name">アムロ・レイ</div>
+              <div class="chat-bubble">そこだっ！</div>
+            </div>
+            <div class="log-entry">
+              <div>防衛システムに 150 のダメージ！</div>
+            </div>
+            <div class="chat-message chat-defender">
+              <div class="chat-name">防衛システム</div>
+              <div class="chat-bubble">自動迎撃システム作動。目標を排除します。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

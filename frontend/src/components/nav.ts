@@ -29,11 +29,13 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: '拠点',
     items: [
+      { to: '/base', label: '基地', icon: '⛫' },
       { to: '/hangar', label: '格納庫', icon: '⬢' },
       { to: '/training', label: 'フラナガン機関', icon: '⌘' },
       { to: '/anaheim', label: 'アナハイム', icon: '⚙' },
       { to: '/trade', label: '中古MS売り場', icon: '⇄' },
       { to: '/team', label: 'チーム編成', icon: '⧉' },
+      { to: '/museum', label: '博物館', icon: '🏛' },
     ],
   },
   {
@@ -42,7 +44,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { to: '/tournament', label: 'トーナメント', icon: '♛' },
       { to: '/simulator', label: 'シミュレーター', icon: '◐' },
       { to: '/tactics', label: '戦術設定', icon: '⊹' },
-      { to: '/log', label: '防衛履歴', icon: '☰' },
+      { to: '/log', label: '個別戦履歴', icon: '☰' },
     ],
   },
   {

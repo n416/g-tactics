@@ -1,4 +1,4 @@
-PRAGMA foreign_keys = OFF;
+﻿PRAGMA foreign_keys = OFF;
 DROP TABLE IF EXISTS characters;
 DROP TABLE IF EXISTS units;
 DROP TABLE IF EXISTS items;
@@ -152,6 +152,21 @@ CREATE TABLE hangars (
   current_en INTEGER DEFAULT -1,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+DROP TABLE IF EXISTS user_unit_stats;
+CREATE TABLE user_unit_stats (
+  user_id VARCHAR(255) NOT NULL,
+  unit_id INTEGER NOT NULL,
+  obtained_count INTEGER NOT NULL DEFAULT 0,
+  first_obtained_at DATETIME,
+  total_kills INTEGER NOT NULL DEFAULT 0,
+  current_win_streak INTEGER NOT NULL DEFAULT 0,
+  max_win_streak INTEGER NOT NULL DEFAULT 0,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, unit_id),
+  FOREIGN KEY (user_id) REFERENCES characters(id) ON DELETE CASCADE,
+  FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS item_inventory;
@@ -2698,3 +2713,53 @@ UPDATE units SET syurui='1mi' WHERE id=903;
 UPDATE units SET syurui='1mi' WHERE id=906;
 UPDATE units SET syurui='19ai' WHERE id=907;
 UPDATE units SET syurui='19ei' WHERE id=910;
+
+DROP TABLE IF EXISTS user_bases;
+CREATE TABLE user_bases (
+  user_id VARCHAR(255) PRIMARY KEY,
+  name TEXT NOT NULL,
+  terrain INTEGER NOT NULL DEFAULT 1,
+  power_last_collected_at INTEGER NOT NULL DEFAULT 0,
+  shield_until INTEGER NOT NULL DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+DROP TABLE IF EXISTS user_facilities;
+CREATE TABLE user_facilities (
+  user_id VARCHAR(255) NOT NULL,
+  facility TEXT NOT NULL,
+  level INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (user_id, facility),
+  FOREIGN KEY (user_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+CREATE TABLE museum_exhibits (
+  user_id VARCHAR(255) NOT NULL,
+  slot_index INTEGER NOT NULL,
+  unit_id INTEGER NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, slot_index),
+  FOREIGN KEY (user_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+CREATE TABLE museum_settings (
+  user_id VARCHAR(255) PRIMARY KEY,
+  featured_unit_id INTEGER,
+  curator_comment TEXT,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+CREATE TABLE museum_guestbook (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  target_user_id VARCHAR(255) NOT NULL,   -- 書き込まれた基地のオーナー
+  author_user_id VARCHAR(255) NOT NULL,   -- 書き込んだユーザー（匿名不可）
+  content TEXT NOT NULL,                  -- 最大140文字（サーバー側検証）
+  is_deleted INTEGER NOT NULL DEFAULT 0,  -- 論理削除（館長 or 本人）
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (target_user_id) REFERENCES characters(id) ON DELETE CASCADE,
+  FOREIGN KEY (author_user_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_guestbook_target ON museum_guestbook (target_user_id, created_at DESC);
+

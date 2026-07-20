@@ -71,7 +71,7 @@ defenseApp.post('/create', async (c) => {
   if (!title || !String(title).trim()) return c.json({ error: '作戦名を入力してください。' }, 400)
 
   const existing = await db.prepare(`SELECT id FROM defense_battles WHERE owner_id = ?`).bind(user.id).first()
-  if (existing) return c.json({ error: 'すでに個別戦闘を設置しています。' }, 400)
+  if (existing) return c.json({ error: 'すでに個別戦を設置しています。' }, 400)
 
   // 原作 sanka: 自分自身も参加条件を満たす必要がある（「自分が条件にあっていません」）
   const self = await getFullCharacter(db, user.id)
@@ -123,11 +123,15 @@ defenseApp.post('/challenge/:id', async (c) => {
   const reqErr = checkGateRequirements(attacker, battle)
   if (reqErr) return c.json({ error: reqErr }, 400)
 
+  attacker.hp = attacker.hp ?? calcMaxHp(attacker.unit_base_hp, attacker.status_piloting);
+  attacker.en = attacker.en ?? calcMaxEn(attacker.unit_base_en, attacker.status_piloting);
+
   if (attacker.hp !== null && attacker.hp <= 0) return c.json({ error: '機体が大破しています。整備を行ってください。' }, 400)
 
   // P32: 戦闘クールダウン（原作 battle.cgi:58-62 ほか全戦闘入口）
   const cdRemain = await checkBattleCooldown(db, user.id, c.env)
   if (cdRemain !== null) return c.json({ error: `${cdRemain}秒後闘えるようになります。` }, 400)
+
 
   let win = false
   let logs: string[] = []
@@ -263,8 +267,8 @@ defenseApp.post('/challenge/:id', async (c) => {
 
   // 伝言で詳細を送信（以前の長文ログを自分に送っていたバグを修正し、防衛者へ簡潔な結果を送る）
   const defenseResultMsg = win 
-    ? `【防衛戦敗北】個別戦闘 '${battle.title}' にて、あなたの防衛機体が${attacker.chara_name}に敗北し、防衛者の座を奪われました…。`
-    : `【防衛戦勝利】個別戦闘 '${battle.title}' にて、あなたの防衛機体が${attacker.chara_name}を撃退しました！`;
+    ? `【個別戦敗北】個別戦 '${battle.title}' にて、あなたの防衛機体が${attacker.chara_name}に敗北し、防衛者の座を奪われました…。`
+    : `【個別戦勝利】個別戦 '${battle.title}' にて、あなたの防衛機体が${attacker.chara_name}を撃退しました！`;
   await db.prepare(`INSERT INTO private_messages (sender_id, recipient_id, message) VALUES (?, ?, ?)`).bind(user.id, battle.champion_id, defenseResultMsg).run()
 
   return c.json({ success: true, message: resultMessage + '\n(詳細は伝言ボックスをご確認ください)', events, meta, logs, reward })

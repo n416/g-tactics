@@ -10,6 +10,7 @@ import { hasPostBattleEffect } from './tokusyuEffects'
 import { parseTraits } from './traits'
 import { fameGainBias, goldTraitRand, sonsyoTraitBonus, kitaiFetishSave } from './traitEffects'
 import { calcMapl, calcTul, gainKaisyo } from './kaisyo'
+import { recordUnitBattleResult } from './unitStats'
 
 const irand = (x: number) => Math.floor(Math.random() * Math.max(0, x));
 const int = Math.trunc;
@@ -400,6 +401,9 @@ export async function applyPersonalBattleResults(db: any, attacker: any, defende
     .bind(isWin ? 1 : 0, attacker.id).run();
   await db.prepare(`UPDATE characters SET total_battles = total_battles + 1, win_battles = win_battles + ? WHERE id = ?`)
     .bind(isWin ? 0 : 1, defender.id).run();
+
+  await recordUnitBattleResult(db, { userId: attacker.id, unitId: attacker.unit_id, isWin });
+  await recordUnitBattleResult(db, { userId: defender.id, unitId: defender.unit_id, isWin: !isWin });
 
   const eventsJson = opts.events ? JSON.stringify(opts.events) : null;
   const metaJson = opts.meta ? JSON.stringify(opts.meta) : null;

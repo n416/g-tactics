@@ -21,6 +21,7 @@ interface User {
   status_long_range: number;
   unit_name: string;
   unit_image: string | null;
+  icon?: string | null;
   current_hp: number;
   max_hp: number;
   current_en: number;
@@ -401,8 +402,19 @@ export const MyPage: React.FC = () => {
             {/* PILOT SUMMARY */}
             <div className="stats-allocation" style={{ margin: 0 }}>
               <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                <div style={{ width: '60px', height: '60px', background: '#333', border: '1px solid #555', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', color: '#888' }}>
-                  画像
+                <div className="pilot-avatar-container">
+                  {user.icon ? (
+                    <img
+                      src={`/images/chara/${user.icon}`}
+                      alt={user.chara_name}
+                      className="pilot-avatar-image"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/no_image.png';
+                      }}
+                    />
+                  ) : (
+                    <span className="pilot-avatar-fallback">画像</span>
+                  )}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.8rem', color: '#4facfe' }}>{user.chara_name}</div>

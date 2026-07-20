@@ -10,7 +10,7 @@ import numpy as np
 from PIL import Image
 from rembg import remove, new_session
 
-ROOT = Path(r"C:\Users\nakam\g-tactics")
+ROOT = Path(__file__).resolve().parents[2]
 PROD = ROOT / "tmp-unit-images" / "production"
 REFS = PROD / "refs"
 RAW = PROD / "raw"        # agy生成の原本(マゼンタ背景jpg)

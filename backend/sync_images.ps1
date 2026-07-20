@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Continue"
 
-$sourceDir = "C:\Users\nakam\g-tactics\tmp-unit-images\production\out"
-$publicDir = "C:\Users\nakam\g-tactics\frontend\public\images\units"
+$sourceDir = Join-Path $PSScriptRoot "..\tmp-unit-images\production\out"
+$publicDir = Join-Path $PSScriptRoot "..\frontend\public\images\units"
 
 if (!(Test-Path $sourceDir)) {
     Write-Host "Source directory does not exist: $sourceDir" -ForegroundColor Red

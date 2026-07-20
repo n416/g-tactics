@@ -191,12 +191,12 @@ export const Base: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="layout-main" style={{ color: 'var(--text-secondary)' }}>Loading...</div>;
+    return <div className="register-container"><div className="base-loading">Loading...</div></div>;
   }
 
   if (!baseInfo) {
     return (
-      <main className="layout-main">
+      <div className="register-container">
         <div className="base-container">
           <div className="page-head">
             <div className="base-title">基地設立</div>
@@ -234,7 +234,7 @@ export const Base: React.FC = () => {
             </button>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -266,7 +266,7 @@ export const Base: React.FC = () => {
   };
 
   return (
-    <main className="layout-main">
+    <div className="register-container">
       <div className="base-container">
         <div className="page-head">
           <div>
@@ -465,6 +465,6 @@ export const Base: React.FC = () => {
           </div>
         </div>
       </Modal>
-    </main>
+    </div>
   );
 };

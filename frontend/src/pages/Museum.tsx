@@ -114,11 +114,11 @@ export const Museum: React.FC = () => {
     if (!isVisitorMode) fetchCollection();
   }, [userId]);
 
-  if (loading || !data) return <div className="layout-main" style={{color:'var(--text-secondary)'}}>Loading...</div>;
+  if (loading || !data) return <div className="register-container" style={{color:'var(--text-secondary)'}}>Loading...</div>;
 
   if (data.museumLevel === 0) {
     return (
-      <div className="layout-main page">
+      <div className="register-container">
         <div style={{ textAlign: 'center', padding: '4rem 0' }}>
           <h2>博物館が建設されていません</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
@@ -268,7 +268,8 @@ export const Museum: React.FC = () => {
   });
 
   return (
-    <main className="layout-main page museum-page" style={{ position: 'relative' }}>
+    <div className="register-container">
+      <div className="museum-page" style={{ width: '100%', position: 'relative' }}>
       
       {isVisitorMode && data.owner && (
         <div style={{ background: 'var(--accent-cyan)', color: '#000', padding: '10px', textAlign: 'center', fontWeight: 'bold', position: 'sticky', top: 0, zIndex: 10 }}>
@@ -440,6 +441,7 @@ export const Museum: React.FC = () => {
         </div>
       </Modal>}
 
-    </main>
+      </div>
+    </div>
   );
 };
